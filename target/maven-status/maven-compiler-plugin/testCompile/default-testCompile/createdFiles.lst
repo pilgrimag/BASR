@@ -1,3 +1,4 @@
+com/basr/SigVerifyTest.class
 com/basr/RegistrationTest.class
-com/basr/SignTest.class
 com/basr/RecKeyGenTest.class
+com/basr/SignTest.class

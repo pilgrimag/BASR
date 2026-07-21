@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.basr.SigVerifyTest" time="0.059" tests="7" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.basr.AggregateTest" time="0.176" tests="6" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -52,11 +52,52 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="validSensitiveSignatureShouldPass" classname="com.basr.SigVerifyTest" time="0.008"/>
-  <testcase name="tamperedReportDataShouldFail" classname="com.basr.SigVerifyTest" time="0.007"/>
-  <testcase name="unregisteredDeviceShouldFail" classname="com.basr.SigVerifyTest" time="0.006"/>
-  <testcase name="tamperedSignatureResponseShouldFail" classname="com.basr.SigVerifyTest" time="0.007"/>
-  <testcase name="responseOutsideScalarFieldShouldFail" classname="com.basr.SigVerifyTest" time="0.006"/>
-  <testcase name="tamperedReportDigestShouldFail" classname="com.basr.SigVerifyTest" time="0.014"/>
-  <testcase name="validNonSensitiveSignatureShouldPass" classname="com.basr.SigVerifyTest" time="0.003"/>
+  <testcase name="exactDeviceCommitmentDuplicateShouldBeRemoved" classname="com.basr.AggregateTest" time="0.054"/>
+  <testcase name="validReportsShouldAggregate" classname="com.basr.AggregateTest" time="0.049">
+    <system-out><![CDATA[
+========== BASR Aggregate Result ==========
+acceptedCount = 3
+batchId       = batch-001
+timestamp     = 1784615908540
+Ragg          = 0363e1577665ea625e7d6e6dfd22b7d2b4a4a0fbded5fc137fbe2afff7622e0fb2
+sagg          = b428fd27a214cf50d997f1599f8c75bdc810fc0a19fc76cef6de95ea4f10f514
+mu            = feeae0d023c81a501ed637235f6627672a0508b4ea3e588dc83687accfcf8b46
+cid           = null
+
+---------- Package Entries ----------
+Entry[0]
+  deviceId  = device-001
+  beta      = 0
+  batchId   = batch-001
+  timestamp = 1784615908540
+  dataBytes = 14
+  hasRM     = false
+  digest    = 275944ab7b1a4597aecdfcd2def256cccaa33f5c5a06e2a9c47327658786de26
+  R_i       = 03ca764bce049b8874a240c0d14c162dc2879fdae264ca31e5963542192679c686
+Entry[1]
+  deviceId  = device-002
+  beta      = 1
+  batchId   = batch-001
+  timestamp = 1784615908540
+  dataBytes = 52
+  hasRM     = true
+  digest    = 808c8adb7d464910bd7fb45f643b3d97c18b9e99314d6714b15c6c39696a8864
+  R_i       = 026ad9c320be329be4825b6631e0f5ec2c95c1af7b4847e4d1595b64f09cb3acb2
+Entry[2]
+  deviceId  = device-003
+  beta      = 0
+  batchId   = batch-001
+  timestamp = 1784615908540
+  dataBytes = 11
+  hasRM     = false
+  digest    = 3dc92699a574e3f934c6fbda4a81238defbe26f77f5f6450ef9a7598fa14b059
+  R_i       = 0323ad2710f8967261a83575f34e0ddc2fedbffaf8a2aa3c26fa028d5fbcb32db2
+===========================================
+
+]]></system-out>
+  </testcase>
+  <testcase name="noValidEntryShouldReturnEmpty" classname="com.basr.AggregateTest" time="0.016"/>
+  <testcase name="mismatchedBatchOrTimestampShouldBeFiltered" classname="com.basr.AggregateTest" time="0.017"/>
+  <testcase name="sameDeviceWithDifferentCommitmentsShouldRemain" classname="com.basr.AggregateTest" time="0.015"/>
+  <testcase name="invalidDuplicateShouldNotBlockLaterValidEntry" classname="com.basr.AggregateTest" time="0.014"/>
 </testsuite>

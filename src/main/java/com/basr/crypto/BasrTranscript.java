@@ -1,6 +1,7 @@
 package com.basr.crypto;
 
 import com.basr.entity.RecoveryMaterial;
+import com.basr.entity.Report;
 
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -174,5 +175,127 @@ public final class BasrTranscript {
             throw new IllegalArgumentException(
                     "batchId cannot be blank");
         }
+    }
+
+    /**
+     * 对完整报告 rep_i 进行规范编码。
+     *
+     * rep_i = (
+     *      ID_i,
+     *      pk_i,
+     *      beta_i,
+     *      D_i,
+     *      RM_i,
+     *      bid_i,
+     *      t_i,
+     *      d_i
+     * )
+     *
+     * 该编码将用于：
+     *
+     *      Pkg = ((rep_i, R_i))
+     *
+     * 以及：
+     *
+     *      mu = H3(
+     *          (rep_1 || R_1)
+     *          || ...
+     *          || (rep_q || R_q)
+     *      )
+     *
+     * 所有字段均采用无歧义的长度前缀编码。
+     */
+    public static byte[] encodeReport(
+            PublicParams pp,
+            Report report) {
+
+        Objects.requireNonNull(pp, "pp");
+        Objects.requireNonNull(report, "report");
+
+        if (!PointCodec.isValidGroupElement(
+                pp,
+                report.getPublicKey())) {
+
+            throw new IllegalArgumentException(
+                    "Report public key is not a valid element of G");
+        }
+
+        if (!Schnorr.isScalar(
+                report.getDigest(),
+                pp.getP())) {
+
+            throw new IllegalArgumentException(
+                    "Report digest must belong to Z_p");
+        }
+
+        if (report.getBeta() != 0
+                && report.getBeta() != 1) {
+
+            throw new IllegalArgumentException(
+                    "Report beta must be 0 or 1");
+        }
+
+        if (report.getBeta() == 0
+                && report.hasRecoveryMaterial()) {
+
+            throw new IllegalArgumentException(
+                    "Non-sensitive report must use RM_i = bottom");
+        }
+
+        if (report.getBeta() == 1
+                && !report.hasRecoveryMaterial()) {
+
+            throw new IllegalArgumentException(
+                    "Sensitive report requires recovery material");
+        }
+
+        return TranscriptEncoder.encode(
+                TranscriptEncoder.utf8(
+                        report.getDeviceId()),
+                PointCodec.encodeCompressed(
+                        report.getPublicKey()),
+                TranscriptEncoder.intValue(
+                        report.getBeta()),
+                report.getData(),
+                encodeRecoveryMaterial(
+                        report.getRecoveryMaterial()),
+                TranscriptEncoder.utf8(
+                        report.getBatchId()),
+                TranscriptEncoder.longValue(
+                        report.getTimestamp()),
+                TranscriptEncoder.scalar(
+                        report.getDigest(),
+                        pp.getP()));
+    }
+
+    /**
+     * 编码 Pkg 中的单个条目：
+     *
+     *      (rep_i, R_i)
+     *
+     * 这里不包含 s_i，因为算法定义的离线包 Pkg
+     * 只保存报告描述符和单签名承诺 R_i。
+     */
+    public static byte[] encodePackageEntry(
+            PublicParams pp,
+            Report report,
+            ECPoint commitment) {
+
+        Objects.requireNonNull(
+                commitment,
+                "commitment");
+
+        if (!PointCodec.isValidGroupElement(
+                pp,
+                commitment)) {
+
+            throw new IllegalArgumentException(
+                    "Signature commitment is not a valid element of G");
+        }
+
+        return TranscriptEncoder.encode(
+                encodeReport(pp, report),
+                PointCodec.encodeCompressed(
+                        commitment));
     }
 }

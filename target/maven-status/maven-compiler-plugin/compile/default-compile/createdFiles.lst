@@ -12,6 +12,7 @@ com/basr/App.class
 com/basr/entity/AggregateSignature.class
 com/basr/crypto/PublicParams$KemParameters.class
 com/basr/crypto/Hash.class
+com/basr/algorithm/Aggregate$PackageEntry.class
 com/basr/algorithm/SigVerify.class
 com/basr/algorithm/Setup.class
 com/basr/entity/BatchRecord.class
@@ -27,9 +28,13 @@ com/basr/entity/RegistrationResult.class
 com/basr/algorithm/Registration.class
 com/basr/entity/SignedReport.class
 com/basr/crypto/ScalarSampler.class
+com/basr/algorithm/Aggregate.class
+com/basr/algorithm/Aggregate$Result.class
 com/basr/crypto/X25519Codec.class
+com/basr/algorithm/Aggregate$AcceptedEntry.class
 com/basr/entity/RegisteredDevice.class
 com/basr/crypto/Hkdf.class
 com/basr/entity/Report.class
 com/basr/crypto/Kem.class
+com/basr/algorithm/Aggregate$DuplicateKey.class
 com/basr/crypto/PublicParams$HashParameters.class

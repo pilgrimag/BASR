@@ -158,4 +158,83 @@ public final class TranscriptEncoder {
 
         return encoded;
     }
+
+    /**
+     * 将多个字节数组直接连接。
+     *
+     * 注意：
+     * 该方法只用于密码标准明确要求的固定格式连接，
+     * 例如 RFC 9180 的 kem_context = enc || pkRm。
+     *
+     * 普通 BASR 协议字段仍应使用 encode() 的长度前缀编码。
+     */
+    public static byte[] concat(byte[]... arrays) {
+
+        Objects.requireNonNull(arrays, "arrays");
+
+        int totalLength = 0;
+
+        for (byte[] array : arrays) {
+            Objects.requireNonNull(array, "array");
+            totalLength = Math.addExact(totalLength, array.length);
+        }
+
+        byte[] result = new byte[totalLength];
+        int offset = 0;
+
+        for (byte[] array : arrays) {
+            System.arraycopy(
+                    array,
+                    0,
+                    result,
+                    offset,
+                    array.length);
+
+            offset += array.length;
+        }
+
+        return result;
+    }
+
+    /**
+     * 将 Z_p 中的标量编码为固定长度无符号大端字节串。
+     *
+     * 固定长度为：
+     *
+     *      ceil(bitLength(p) / 8)
+     *
+     * 后续编码 d_i、h_i、s_i 等标量时使用。
+     */
+    public static byte[] scalar(
+            BigInteger value,
+            BigInteger p) {
+
+        Objects.requireNonNull(value, "value");
+        Objects.requireNonNull(p, "p");
+
+        if (value.signum() < 0 || value.compareTo(p) >= 0) {
+            throw new IllegalArgumentException(
+                    "value must belong to Z_p");
+        }
+
+        int length = (p.bitLength() + 7) / 8;
+
+        byte[] raw = unsignedInteger(value);
+
+        if (raw.length > length) {
+            throw new IllegalArgumentException(
+                    "value does not fit the scalar encoding length");
+        }
+
+        byte[] encoded = new byte[length];
+
+        System.arraycopy(
+                raw,
+                0,
+                encoded,
+                length - raw.length,
+                raw.length);
+
+        return encoded;
+    }
 }

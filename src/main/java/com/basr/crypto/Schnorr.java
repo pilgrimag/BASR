@@ -207,4 +207,79 @@ public final class Schnorr {
                     name + " must belong to Z_p^*");
         }
     }
+
+    /**
+     * 计算承诺：
+     *
+     *      R = [r]g
+     */
+    public static ECPoint createCommitment(
+            PublicParams pp,
+            BigInteger nonce) {
+
+        Objects.requireNonNull(pp, "pp");
+
+        requireNonZeroScalar(
+                nonce,
+                pp.getP(),
+                "nonce");
+
+        ECPoint commitment =
+                pp.getGenerator()
+                        .multiply(nonce)
+                        .normalize();
+
+        if (!PointCodec.isValidGroupElement(
+                pp,
+                commitment)) {
+
+            throw new IllegalStateException(
+                    "Generated commitment is not in G");
+        }
+
+        return commitment;
+    }
+
+    /**
+     * 验证 Schnorr 等式：
+     *
+     *      [s]g = R + [h]pk
+     */
+    public static boolean verifyResponse(
+            PublicParams pp,
+            ECPoint publicKey,
+            ECPoint commitment,
+            BigInteger challenge,
+            BigInteger response) {
+
+        Objects.requireNonNull(pp, "pp");
+
+        if (!PointCodec.isValidGroupElement(
+                pp,
+                publicKey)
+                || !PointCodec.isValidGroupElement(
+                        pp,
+                        commitment)) {
+
+            return false;
+        }
+
+        if (!isScalar(challenge, pp.getP())
+                || !isScalar(response, pp.getP())) {
+
+            return false;
+        }
+
+        ECPoint left =
+                pp.getGenerator()
+                        .multiply(response)
+                        .normalize();
+
+        ECPoint right =
+                commitment
+                        .add(publicKey.multiply(challenge))
+                        .normalize();
+
+        return left.equals(right);
+    }
 }

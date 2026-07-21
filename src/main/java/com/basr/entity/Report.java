@@ -1,179 +1,160 @@
 package com.basr.entity;
 
+import org.bouncycastle.math.ec.ECPoint;
+
+import java.math.BigInteger;
+import java.util.Objects;
 
 /**
- * BASR报告实体
+ * BASR 设备报告描述符：
  *
- * 对应论文：
- *
- * rep_i
- *
- *
- * 一个设备产生一个report，
- * 后续由Aggregator进行聚合。
- *
+ * rep_i = (
+ *      ID_i,
+ *      pk_i,
+ *      beta_i,
+ *      D_i,
+ *      RM_i,
+ *      bid,
+ *      t,
+ *      d_i
+ * )
  */
-public class Report {
+public final class Report {
 
+    private final String deviceId;
 
+    private final ECPoint publicKey;
 
-    /**
-     * 设备身份
-     *
-     * ID_i
-     */
-    private String deviceId;
-
-
+    private final int beta;
 
     /**
-     * 设备公钥
-     *
-     * pk_i
+     * beta=0：原始报告 m_i；
+     * beta=1：AEAD 密文 D_i。
      */
-    private String publicKey;
-
-
+    private final byte[] data;
 
     /**
-     * 数据敏感标识
-     *
-     *
-     * β_i:
-     *
-     * β_i=1:
-     *      敏感数据
-     *
-     * β_i=0:
-     *      普通数据
-     *
+     * beta=0：null，表示 bottom；
+     * beta=1：真实 KEM 恢复材料。
      */
-    private int beta;
+    private final RecoveryMaterial recoveryMaterial;
 
+    private final String batchId;
 
+    private final long timestamp;
 
-    /**
-     * 数据密文或者明文
-     *
-     *
-     * β=1:
-     *
-     *      AEAD ciphertext
-     *
-     *
-     * β=0:
-     *
-     *      plaintext
-     */
-    private String data;
-
-
-
-    /**
-     * KEM恢复材料
-     *
-     * 对应：
-     *
-     * RM_i
-     *
-     *
-     * β=1时存在
-     */
-    private String recoveryMaterial;
-
-
-
-    /**
-     * 批次ID
-     *
-     * bid
-     */
-    private String batchId;
-
-
-
-    /**
-     * 时间戳
-     *
-     * t
-     */
-    private long timestamp;
-
-
-
-    /**
-     * 报告摘要
-     *
-     * d_i
-     *
-     */
-    private String digest;
-
-
-
-
-    public Report(){}
-
-
+    private final BigInteger digest;
 
     public Report(
             String deviceId,
-            String publicKey,
+            ECPoint publicKey,
             int beta,
-            String data,
-            String recoveryMaterial,
+            byte[] data,
+            RecoveryMaterial recoveryMaterial,
             String batchId,
             long timestamp,
-            String digest){
+            BigInteger digest) {
 
+        this.deviceId =
+                Objects.requireNonNull(
+                        deviceId,
+                        "deviceId");
 
-        this.deviceId=deviceId;
+        this.publicKey =
+                Objects.requireNonNull(
+                        publicKey,
+                        "publicKey")
+                        .normalize();
 
-        this.publicKey=publicKey;
+        this.data =
+                Objects.requireNonNull(
+                        data,
+                        "data")
+                        .clone();
 
-        this.beta=beta;
+        this.batchId =
+                Objects.requireNonNull(
+                        batchId,
+                        "batchId");
 
-        this.data=data;
+        this.digest =
+                Objects.requireNonNull(
+                        digest,
+                        "digest");
 
-        this.recoveryMaterial=recoveryMaterial;
+        if (deviceId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "deviceId cannot be blank");
+        }
 
-        this.batchId=batchId;
+        if (batchId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "batchId cannot be blank");
+        }
 
-        this.timestamp=timestamp;
+        if (beta != 0 && beta != 1) {
+            throw new IllegalArgumentException(
+                    "beta must be 0 or 1");
+        }
 
-        this.digest=digest;
+        if (beta == 0
+                && recoveryMaterial != null) {
 
+            throw new IllegalArgumentException(
+                    "Non-sensitive report must use RM_i = bottom");
+        }
+
+        if (beta == 1
+                && recoveryMaterial == null) {
+
+            throw new IllegalArgumentException(
+                    "Sensitive report requires recovery material");
+        }
+
+        if (digest.signum() < 0) {
+            throw new IllegalArgumentException(
+                    "digest cannot be negative");
+        }
+
+        this.beta = beta;
+        this.recoveryMaterial =
+                recoveryMaterial;
+        this.timestamp = timestamp;
     }
 
-
-
-    public String getDeviceId(){
+    public String getDeviceId() {
         return deviceId;
     }
 
+    public ECPoint getPublicKey() {
+        return publicKey;
+    }
 
-    public int getBeta(){
+    public int getBeta() {
         return beta;
     }
 
-
-    public String getData(){
-        return data;
+    public byte[] getData() {
+        return data.clone();
     }
 
+    public RecoveryMaterial getRecoveryMaterial() {
+        return recoveryMaterial;
+    }
 
-    public String getBatchId(){
+    public boolean hasRecoveryMaterial() {
+        return recoveryMaterial != null;
+    }
+
+    public String getBatchId() {
         return batchId;
     }
 
-
-    public long getTimestamp(){
+    public long getTimestamp() {
         return timestamp;
     }
 
-
-    public String getDigest(){
+    public BigInteger getDigest() {
         return digest;
     }
-
 }

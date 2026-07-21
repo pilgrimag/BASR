@@ -1,66 +1,52 @@
 package com.basr.entity;
 
+import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
-
+import java.util.Objects;
 
 /**
- * BASR单设备签名
+ * BASR 单设备签名：
  *
- * 对应：
- *
- * σ_i=(R_i,s_i)
- *
- *
- * Schnorr signature
- *
+ *      sigma_i = (R_i, s_i)
  */
-public class Signature {
+public final class Signature {
 
+    private final ECPoint r;
 
-    /**
-     * 随机承诺
-     *
-     * R_i=g^{r_i}
-     */
-    private BigInteger R;
-
-
-
-    /**
-     * 响应值
-     *
-     * s_i=r_i+h_i sk_i
-     */
-    private BigInteger s;
-
-
+    private final BigInteger s;
 
     public Signature(
-            BigInteger R,
-            BigInteger s){
+            ECPoint r,
+            BigInteger s) {
 
-        this.R=R;
+        this.r =
+                Objects.requireNonNull(
+                        r,
+                        "r")
+                        .normalize();
 
-        this.s=s;
+        this.s =
+                Objects.requireNonNull(
+                        s,
+                        "s");
 
+        if (r.isInfinity()) {
+            throw new IllegalArgumentException(
+                    "R_i cannot be the point at infinity");
+        }
+
+        if (s.signum() < 0) {
+            throw new IllegalArgumentException(
+                    "s_i cannot be negative");
+        }
     }
 
-
-
-    public BigInteger getR(){
-
-        return R;
-
+    public ECPoint getR() {
+        return r;
     }
 
-
-
-    public BigInteger getS(){
-
+    public BigInteger getS() {
         return s;
-
     }
-
-
 }

@@ -1,7 +1,9 @@
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/App.java
+/home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/algorihm/RecKeyGen.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/algorihm/Registration.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/algorihm/Setup.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/crypto/Hash.java
+/home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/crypto/Kem.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/crypto/PointCodec.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/crypto/PublicParams.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/crypto/ScalarSampler.java

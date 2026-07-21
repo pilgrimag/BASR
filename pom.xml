@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="
+             http://maven.apache.org/POM/4.0.0
+             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.basr</groupId>
+    <artifactId>basr-algorithm</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>BASR Local Algorithm</name>
+
+    <properties>
+        <!-- 源文件统一使用 UTF-8 -->
+        <project.build.sourceEncoding>
+            UTF-8
+        </project.build.sourceEncoding>
+
+        <!--
+            使用 Java 21 的语言特性、字节码格式和标准库 API。
+            PublicParams 中的 record 需要 Java 16 或更高版本。
+        -->
+        <maven.compiler.release>
+            21
+        </maven.compiler.release>
+
+        <junit.version>
+            5.10.2
+        </junit.version>
+
+        <bouncycastle.version>
+            1.84
+        </bouncycastle.version>
+    </properties>
+
+    <dependencies>
+
+        <!--
+            Bouncy Castle：
+            secp256k1、ECPoint、ECDomainParameters，
+            后续也用于 X25519、HKDF 等密码实现。
+        -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
+        </dependency>
+
+        <!-- JUnit 5 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!--
+                显式指定 Java 21。
+                不再使用 source=8 或 target=8。
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+
+                <configuration>
+                    <release>
+                        21
+                    </release>
+
+                    <encoding>
+                        UTF-8
+                    </encoding>
+
+                    <showWarnings>
+                        true
+                    </showWarnings>
+                </configuration>
+            </plugin>
+
+            <!-- 支持执行 JUnit 5 测试 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+
+                <configuration>
+                    <useModulePath>
+                        false
+                    </useModulePath>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

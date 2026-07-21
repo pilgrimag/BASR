@@ -1,4 +1,3 @@
-/home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/App.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/algorihm/AggVerify.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/algorihm/Aggregate.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/algorihm/RecKeyGen.java
@@ -30,5 +29,9 @@
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/entity/Report.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/entity/Signature.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/entity/SignedReport.java
+/home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/ipfs/IpfsClient.java
+/home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/ipfs/KuboHttpIpfsClient.java
+/home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/persistence/BasrPackageDto.java
+/home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/persistence/PackageCodec.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/registry/DeviceRegistry.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/main/java/com/basr/registry/InMemoryDeviceRegistry.java

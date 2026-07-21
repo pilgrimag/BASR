@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.basr.BasrEndToEndTest" time="0.458" tests="2" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.basr.BasrEndToEndTest" time="0.373" tests="2" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
-    <property name="java.class.path" value="/home/pilgrimage/basr/basr-java/basr-algorithm/target/test-classes:/home/pilgrimage/basr/basr-java/basr-algorithm/target/classes:/home/pilgrimage/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.84/bcprov-jdk18on-1.84.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/home/pilgrimage/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/pilgrimage/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/home/pilgrimage/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:"/>
+    <property name="java.class.path" value="/home/pilgrimage/basr/basr-java/basr-algorithm/target/test-classes:/home/pilgrimage/basr/basr-java/basr-algorithm/target/classes:/home/pilgrimage/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.84/bcprov-jdk18on-1.84.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/home/pilgrimage/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/pilgrimage/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/home/pilgrimage/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/home/pilgrimage/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.21.3/jackson-databind-2.21.3.jar:/home/pilgrimage/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.21/jackson-annotations-2.21.jar:/home/pilgrimage/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.21.3/jackson-core-2.21.3.jar:"/>
     <property name="java.vm.vendor" value="Ubuntu"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.vendor.url" value="https://ubuntu.com/"/>
@@ -11,9 +11,9 @@
     <property name="java.vm.specification.version" value="21"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="sun.boot.library.path" value="/usr/lib/jvm/java-21-openjdk-amd64/lib"/>
-    <property name="sun.java.command" value="/home/pilgrimage/basr/basr-java/basr-algorithm/target/surefire/surefirebooter-20260721151903695_3.jar /home/pilgrimage/basr/basr-java/basr-algorithm/target/surefire 2026-07-21T15-19-03_607-jvmRun1 surefire-20260721151903695_1tmp surefire_0-20260721151903695_2tmp"/>
+    <property name="sun.java.command" value="/home/pilgrimage/basr/basr-java/basr-algorithm/target/surefire/surefirebooter-20260721155353233_3.jar /home/pilgrimage/basr/basr-java/basr-algorithm/target/surefire 2026-07-21T15-53-53_146-jvmRun1 surefire-20260721155353233_1tmp surefire_0-20260721155353233_2tmp"/>
     <property name="jdk.debug" value="release"/>
-    <property name="surefire.test.class.path" value="/home/pilgrimage/basr/basr-java/basr-algorithm/target/test-classes:/home/pilgrimage/basr/basr-java/basr-algorithm/target/classes:/home/pilgrimage/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.84/bcprov-jdk18on-1.84.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/home/pilgrimage/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/pilgrimage/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/home/pilgrimage/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:"/>
+    <property name="surefire.test.class.path" value="/home/pilgrimage/basr/basr-java/basr-algorithm/target/test-classes:/home/pilgrimage/basr/basr-java/basr-algorithm/target/classes:/home/pilgrimage/.m2/repository/org/bouncycastle/bcprov-jdk18on/1.84/bcprov-jdk18on-1.84.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/home/pilgrimage/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/pilgrimage/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/home/pilgrimage/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/home/pilgrimage/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/home/pilgrimage/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.21.3/jackson-databind-2.21.3.jar:/home/pilgrimage/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.21/jackson-annotations-2.21.jar:/home/pilgrimage/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.21.3/jackson-core-2.21.3.jar:"/>
     <property name="sun.cpu.endian" value="little"/>
     <property name="user.home" value="/home/pilgrimage"/>
     <property name="user.language" value="en"/>
@@ -26,7 +26,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="/home/pilgrimage/basr/basr-java/basr-algorithm/target/surefire/surefirebooter-20260721151903695_3.jar"/>
+    <property name="surefire.real.class.path" value="/home/pilgrimage/basr/basr-java/basr-algorithm/target/surefire/surefirebooter-20260721155353233_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="21.0.11+10-1-24.04.2-Ubuntu"/>
     <property name="user.name" value="pilgrimage"/>
@@ -52,17 +52,17 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="tamperedBatchShouldFailVerificationAndRecovery" classname="com.basr.BasrEndToEndTest" time="0.368"/>
-  <testcase name="completeBasrWorkflowShouldSucceed" classname="com.basr.BasrEndToEndTest" time="0.064">
+  <testcase name="tamperedBatchShouldFailVerificationAndRecovery" classname="com.basr.BasrEndToEndTest" time="0.298"/>
+  <testcase name="completeBasrWorkflowShouldSucceed" classname="com.basr.BasrEndToEndTest" time="0.053">
     <system-out><![CDATA[
 ========== BASR End-to-End Result ==========
 batchId          = batch-end-to-end
-timestamp        = 1784618344598
+timestamp        = 1784620434079
 registeredCount  = 3
 acceptedCount    = 3
-Ragg             = 02a228a94ef212f9bfcc937546b9417a272ca07be4ad754a09775cdc8b4b3578b6
-sagg             = 9704a4eacb8291bca8d1eb500a539a3415b91720aa33344a24a3609bd996a3e7
-mu               = 6150a77e004566366af0740cab9bc88b02bf923fd55f1cb78be587012f916dd0
+Ragg             = 021edf0d0ffc4861ab7141eb88f0d967f272e60038b23ef9bb88bc4a09fa60c976
+sagg             = 7467e5db1d374892cc1caad7fe891d567e0714bc6e3bedecd8e95044eb97cbe0
+mu               = 5a7a38d0eb1c7da1d80de18edfc25ee3f56cd7b9935e6b4676d20a18997abaa0
 cid              = null
 AggVerify        = PASS
 recovered[0]     = temperature=26.8

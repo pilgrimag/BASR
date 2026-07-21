@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.basr.AggVerifyTest" time="0.185" tests="9" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.basr.PackageCodecTest" time="0.055" tests="6" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -7,6 +7,7 @@
     <property name="java.vm.vendor" value="Ubuntu"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.vendor.url" value="https://ubuntu.com/"/>
+    <property name="user.timezone" value="Asia/Shanghai"/>
     <property name="os.name" value="Linux"/>
     <property name="java.vm.specification.version" value="21"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
@@ -52,13 +53,10 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="duplicateDeviceCommitmentShouldFail" classname="com.basr.AggVerifyTest" time="0.024"/>
-  <testcase name="tamperedAggregateCommitmentShouldFail" classname="com.basr.AggVerifyTest" time="0.02"/>
-  <testcase name="mismatchedBatchTimestampShouldFail" classname="com.basr.AggVerifyTest" time="0.015"/>
-  <testcase name="tamperedMuShouldFail" classname="com.basr.AggVerifyTest" time="0.02"/>
-  <testcase name="tamperedReportDataShouldFail" classname="com.basr.AggVerifyTest" time="0.018"/>
-  <testcase name="validAggregateShouldPass" classname="com.basr.AggVerifyTest" time="0.019"/>
-  <testcase name="tamperedAggregateResponseShouldFail" classname="com.basr.AggVerifyTest" time="0.018"/>
-  <testcase name="reorderedPackageShouldFail" classname="com.basr.AggVerifyTest" time="0.027"/>
-  <testcase name="emptyPackageShouldFail" classname="com.basr.AggVerifyTest" time="0.01"/>
+  <testcase name="trailingBytesShouldBeRejected" classname="com.basr.PackageCodecTest" time="0.012"/>
+  <testcase name="decodedSensitiveReportShouldRecover" classname="com.basr.PackageCodecTest" time="0.009"/>
+  <testcase name="roundTripShouldPreserveCanonicalBytes" classname="com.basr.PackageCodecTest" time="0.008"/>
+  <testcase name="decodedPackageShouldPassAggregateVerification" classname="com.basr.PackageCodecTest" time="0.007"/>
+  <testcase name="encodingShouldBeDeterministic" classname="com.basr.PackageCodecTest" time="0.007"/>
+  <testcase name="truncatedPackageShouldBeRejected" classname="com.basr.PackageCodecTest" time="0.007"/>
 </testsuite>

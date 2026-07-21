@@ -35,6 +35,10 @@
         <bouncycastle.version>
             1.84
         </bouncycastle.version>
+
+        <jackson.version>
+            2.21.3
+        </jackson.version>
     </properties>
 
     <dependencies>
@@ -56,6 +60,13 @@
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- 用于解析 Kubo RPC API 返回的 JSON -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
 
     </dependencies>

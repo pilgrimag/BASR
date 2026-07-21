@@ -5,4 +5,6 @@ com/basr/SignTest.class
 com/basr/AggVerifyTest.class
 com/basr/RegistrationTest.class
 com/basr/AggregateTest.class
+com/basr/PackageCodecTest.class
+com/basr/IpfsPackageIntegrationTest.class
 com/basr/RecoveryTest.class

@@ -27,6 +27,7 @@ com/basr/algorithm/AggVerify.class
 com/basr/crypto/PointCodec.class
 com/basr/algorithm/RecKeyGen.class
 com/basr/entity/RegistrationResult.class
+com/basr/algorithm/Recovery.class
 com/basr/algorithm/Registration.class
 com/basr/entity/SignedReport.class
 com/basr/crypto/ScalarSampler.class

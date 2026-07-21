@@ -1,6 +1,7 @@
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/test/java/com/basr/AggVerifyTest.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/test/java/com/basr/AggregateTest.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/test/java/com/basr/RecKeyGenTest.java
+/home/pilgrimage/basr/basr-java/basr-algorithm/src/test/java/com/basr/RecoveryTest.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/test/java/com/basr/RegistrationTest.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/test/java/com/basr/SigVerifyTest.java
 /home/pilgrimage/basr/basr-java/basr-algorithm/src/test/java/com/basr/SignTest.java

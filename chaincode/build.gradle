@@ -1,0 +1,118 @@
+plugins {
+    id 'com.gradleup.shadow' version '9.2.2'
+    id 'application'
+}
+
+group = 'com.basr'
+version = '1.0.0'
+
+repositories {
+    /*
+     * 优先读取本地安装的 basr-algorithm。
+     *
+     * 在父工程执行：
+     *
+     *     mvn clean install
+     *
+     * 后即可解析：
+     *
+     *     com.basr:basr-algorithm:1.0-SNAPSHOT
+     */
+    // mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+
+    /*
+     * 固定版本，不使用 2.5.+，保证实验可复现。
+     */
+    implementation(
+        'org.hyperledger.fabric-chaincode-java:' +
+        'fabric-chaincode-shim:2.5.10'
+    )
+
+    /*
+     * Fabric 官方 Java 样例使用 Genson
+     * 对链上资产执行确定性 JSON 序列化。
+     */
+    implementation 'com.owlike:genson:1.6'
+
+    /*
+     * BASR 已实现并测试的真实算法模块。
+     *
+     * 将 JAR 放在 Chaincode 源码包内，确保 Fabric Java
+     * Builder 容器部署时不依赖宿主机 ~/.m2。
+     */
+    implementation files(
+        'libs/basr-algorithm-1.0-SNAPSHOT.jar'
+    )
+
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.84'
+    implementation 'org.bouncycastle:bcpkix-jdk18on:1.84'
+    implementation 'org.bouncycastle:bcutil-jdk18on:1.84'
+
+    implementation(
+        'com.fasterxml.jackson.core:' +
+        'jackson-databind:2.21.3'
+    )
+
+    testImplementation platform(
+        'org.junit:junit-bom:5.14.0'
+    )
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core:3.27.6'
+    testImplementation 'org.mockito:mockito-core:5.20.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+compileJava {
+    options.release = 21
+}
+
+compileTestJava {
+    options.release = 21
+}
+
+application {
+    mainClass =
+        'org.hyperledger.fabric.contract.ContractRouter'
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
+}
+
+shadowJar {
+    archiveBaseName = 'chaincode'
+    archiveVersion = ''
+    archiveClassifier = ''
+
+    duplicatesStrategy =
+        DuplicatesStrategy.INCLUDE
+
+    mergeServiceFiles()
+
+    manifest {
+        attributes(
+            'Main-Class':
+                'org.hyperledger.fabric.contract.ContractRouter'
+        )
+    }
+}
+
+/*
+ * 部署前必须先完成测试。
+ */
+installDist.dependsOn test

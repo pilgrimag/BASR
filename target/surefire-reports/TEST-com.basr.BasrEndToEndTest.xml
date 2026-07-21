@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.basr.RegistrationTest" time="0.025" tests="6" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.basr.BasrEndToEndTest" time="0.458" tests="2" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -52,10 +52,25 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="65.0"/>
   </properties>
-  <testcase name="tamperedResponseShouldFail" classname="com.basr.RegistrationTest" time="0.003"/>
-  <testcase name="substitutedPublicKeyShouldFail" classname="com.basr.RegistrationTest" time="0.003"/>
-  <testcase name="duplicateDeviceIdShouldFail" classname="com.basr.RegistrationTest" time="0.005"/>
-  <testcase name="tamperedChallengeShouldFail" classname="com.basr.RegistrationTest" time="0.002"/>
-  <testcase name="duplicatePublicKeyShouldFail" classname="com.basr.RegistrationTest" time="0.003"/>
-  <testcase name="validRegistrationShouldSucceed" classname="com.basr.RegistrationTest" time="0.003"/>
+  <testcase name="tamperedBatchShouldFailVerificationAndRecovery" classname="com.basr.BasrEndToEndTest" time="0.368"/>
+  <testcase name="completeBasrWorkflowShouldSucceed" classname="com.basr.BasrEndToEndTest" time="0.064">
+    <system-out><![CDATA[
+========== BASR End-to-End Result ==========
+batchId          = batch-end-to-end
+timestamp        = 1784618344598
+registeredCount  = 3
+acceptedCount    = 3
+Ragg             = 02a228a94ef212f9bfcc937546b9417a272ca07be4ad754a09775cdc8b4b3578b6
+sagg             = 9704a4eacb8291bca8d1eb500a539a3415b91720aa33344a24a3609bd996a3e7
+mu               = 6150a77e004566366af0740cab9bc88b02bf923fd55f1cb78be587012f916dd0
+cid              = null
+AggVerify        = PASS
+recovered[0]     = temperature=26.8
+recovered[1]     = confidential-pressure=81.6
+recovered[2]     = humidity=43
+wrong-key test   = PASS
+============================================
+
+]]></system-out>
+  </testcase>
 </testsuite>

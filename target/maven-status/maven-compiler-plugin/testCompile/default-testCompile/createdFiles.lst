@@ -3,3 +3,4 @@ com/basr/RegistrationTest.class
 com/basr/AggregateTest.class
 com/basr/RecKeyGenTest.class
 com/basr/SignTest.class
+com/basr/AggVerifyTest.class

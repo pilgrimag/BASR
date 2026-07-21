@@ -8,6 +8,7 @@ com/basr/crypto/TranscriptEncoder.class
 com/basr/registry/DeviceRegistry.class
 com/basr/crypto/Aead.class
 com/basr/entity/ProofOfPossession.class
+com/basr/algorithm/AggVerify$DuplicateKey.class
 com/basr/App.class
 com/basr/entity/AggregateSignature.class
 com/basr/crypto/PublicParams$KemParameters.class
@@ -22,6 +23,7 @@ com/basr/entity/Device.class
 com/basr/algorithm/Sign.class
 com/basr/crypto/PublicParams.class
 com/basr/entity/RecoveryMaterial.class
+com/basr/algorithm/AggVerify.class
 com/basr/crypto/PointCodec.class
 com/basr/algorithm/RecKeyGen.class
 com/basr/entity/RegistrationResult.class

@@ -1,0 +1,4 @@
+
+# Gradle generated files
+chaincode/.gradle/
+chaincode/build/

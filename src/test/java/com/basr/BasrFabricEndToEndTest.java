@@ -24,6 +24,8 @@ import com.basr.persistence.PackageCodec;
 import com.basr.entity.RegisteredDevice;
 import com.basr.registry.DeviceRegistry;
 import com.basr.registry.FabricDeviceRegistry;
+import com.basr.registry.FabricDeviceRegistry.RegistryAccessException;
+import com.basr.app.BasrWorkflowService;
 
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -45,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * BASR Fabric + IPFS + cryptographic algorithm integration test.
@@ -80,475 +83,650 @@ class BasrFabricEndToEndTest {
     private static final int SENSITIVE_REPORT =
             1;
 
+    // @Test
+    // @Timeout(
+    //         value = 2,
+    //         unit = TimeUnit.MINUTES
+    // )
+    // void completeRealFabricIpfsWorkflow()
+    //         throws Exception {
+
+    //     /*
+    //      * -----------------------------------------------------
+    //      * 1. Setup
+    //      * -----------------------------------------------------
+    //      */
+
+    //     PublicParams pp =
+    //             Setup.setup(
+    //                     SECURITY_PARAMETER);
+
+    //     IpfsClient ipfsClient =
+    //             new KuboHttpIpfsClient();
+
+    //     assertTrue(
+    //             ipfsClient.isAvailable(),
+    //             "Kubo RPC is unavailable at "
+    //                     + KuboHttpIpfsClient.DEFAULT_RPC_URI);
+
+    //     // InMemoryDeviceRegistry registry =
+    //     //         new InMemoryDeviceRegistry();
+
+    //     String runId =
+    //             uniqueRunId();
+
+    //     String publicDeviceId =
+    //             "fabric-public-" + runId;
+
+    //     String sensitiveDeviceId =
+    //             "fabric-sensitive-" + runId;
+
+    //     String batchId =
+    //             "fabric-batch-" + runId;
+
+    //     byte[] publicPlaintext =
+    //             (
+    //                     "temperature=23.7;"
+    //                             + "run="
+    //                             + runId
+    //             ).getBytes(
+    //                     StandardCharsets.UTF_8);
+
+    //     byte[] sensitivePlaintext =
+    //             (
+    //                     "confidential-pressure=82.2;"
+    //                             + "run="
+    //                             + runId
+    //             ).getBytes(
+    //                     StandardCharsets.UTF_8);
+
+    //     /*
+    //      * -----------------------------------------------------
+    //      * 2. Connect to the real Org1 Fabric Gateway
+    //      * -----------------------------------------------------
+    //      */
+
+    //     try (FabricGatewayClient gateway =
+    //                  FabricGatewayClient
+    //                          .connectLocalTestNetwork()) {
+
+    //         FabricDeviceRegistry registry =
+    //                 new FabricDeviceRegistry(
+    //                         pp,
+    //                         gateway);
+
+    //         assertEquals(
+    //                 "basr",
+    //                 gateway.getChaincodeName());
+
+    //         assertEquals(
+    //                 "basr",
+    //                 gateway.getContractName());
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 3. Generate and register the public device
+    //          * -------------------------------------------------
+    //          */
+
+    //         Device publicDevice =
+    //                 registerDevice(
+    //                         pp,
+    //                         registry,
+    //                         gateway,
+    //                         publicDeviceId);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 4. Generate and register the sensitive device
+    //          * -------------------------------------------------
+    //          */
+
+    //         Device sensitiveDevice =
+    //                 registerDevice(
+    //                         pp,
+    //                         registry,
+    //                         gateway,
+    //                         sensitiveDeviceId);
+
+    //         Collection<RegisteredDevice> allDevices =
+    //                 registry.findAll();
+
+    //         assertTrue(
+    //                 allDevices.stream()
+    //                         .anyMatch(
+    //                                 device ->
+    //                                         publicDeviceId.equals(
+    //                                                 device.getDeviceId())));
+
+    //         assertTrue(
+    //                 allDevices.stream()
+    //                         .anyMatch(
+    //                                 device ->
+    //                                         sensitiveDeviceId.equals(
+    //                                                 device.getDeviceId())));
+
+    //         /*
+    //         * Fabric 账本中可能已有以前 E2E 测试注册的数据，
+    //         * 因此不能断言 size == 2。
+    //         */
+    //         assertTrue(
+    //                 registry.size() >= 2);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 5. Generate the real DR X25519 recovery key
+    //          * -------------------------------------------------
+    //          */
+
+    //         RecoveryKey recoveryKey =
+    //                 RecKeyGen.generate(pp);
+
+    //         assertNotNull(
+    //                 recoveryKey.getSecretKey());
+
+    //         assertNotNull(
+    //                 recoveryKey.getPublicKey());
+
+    //         /*
+    //          * The same timestamp is used for all reports in
+    //          * this batch.
+    //          */
+    //         long timestamp =
+    //                 Instant.now()
+    //                         .toEpochMilli();
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 6. Sign one public report, beta = 0
+    //          * -------------------------------------------------
+    //          */
+
+    //         SignedReport publicSignedReport =
+    //                 Sign.sign(
+    //                         pp,
+    //                         recoveryKey.getPublicKey(),
+    //                         publicDevice,
+    //                         publicPlaintext,
+    //                         PUBLIC_REPORT,
+    //                         batchId,
+    //                         timestamp);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 7. Sign one sensitive report, beta = 1
+    //          * -------------------------------------------------
+    //          */
+
+    //         SignedReport sensitiveSignedReport =
+    //                 Sign.sign(
+    //                         pp,
+    //                         recoveryKey.getPublicKey(),
+    //                         sensitiveDevice,
+    //                         sensitivePlaintext,
+    //                         SENSITIVE_REPORT,
+    //                         batchId,
+    //                         timestamp);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 8. Aggregate real signed reports
+    //          * -------------------------------------------------
+    //          */
+
+    //         Aggregate.Result aggregateResult =
+    //                 Aggregate.aggregate(
+    //                                 pp,
+    //                                 registry,
+    //                                 List.of(
+    //                                         publicSignedReport,
+    //                                         sensitiveSignedReport),
+    //                                 batchId,
+    //                                 timestamp)
+    //                         .orElseThrow(
+    //                                 () ->
+    //                                         new AssertionError(
+    //                                                 "Aggregate rejected "
+    //                                                         + "valid reports"));
+
+    //         BatchRecord localBatchRecord =
+    //                 aggregateResult
+    //                         .batchRecord();
+
+    //         assertFalse(
+    //                 localBatchRecord.hasCid());
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 9. Deterministically encode Pkg
+    //          * -------------------------------------------------
+    //          */
+
+    //         byte[] packageBytes =
+    //                 PackageCodec.encode(
+    //                         pp,
+    //                         aggregateResult);
+
+    //         assertTrue(
+    //                 packageBytes.length > 0);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 10. Upload the real Pkg to Kubo
+    //          * -------------------------------------------------
+    //          */
+
+    //         String cid =
+    //                 ipfsClient.put(
+    //                         packageBytes);
+
+    //         assertNotNull(cid);
+    //         assertFalse(cid.isBlank());
+
+    //         /*
+    //          * Verify that the returned CID resolves to exactly
+    //          * the uploaded deterministic package bytes.
+    //          */
+    //         byte[] immediateDownload =
+    //                 ipfsClient.get(cid);
+
+    //         assertArrayEquals(
+    //                 packageBytes,
+    //                 immediateDownload);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 11. Complete BRec with the real CID
+    //          * -------------------------------------------------
+    //          */
+
+    //         BatchRecord completeBatchRecord =
+    //                 localBatchRecord
+    //                         .withCid(cid);
+
+    //         assertTrue(
+    //                 completeBatchRecord.hasCid());
+
+    //         assertEquals(
+    //                 cid,
+    //                 completeBatchRecord.getCid());
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 12. Submit BRec to real Fabric
+    //          * -------------------------------------------------
+    //          */
+
+    //         assertTrue(
+    //                 gateway.createBatchRecord(
+    //                         pp,
+    //                         completeBatchRecord,
+    //                         cid));
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 13. Read BRec back from basrchannel
+    //          * -------------------------------------------------
+    //          */
+
+    //         FabricGatewayClient.BatchRecordView
+    //                 ledgerView =
+    //                 gateway.readBatchRecord(
+    //                         batchId);
+
+    //         assertEquals(
+    //                 batchId,
+    //                 ledgerView.batchId());
+
+    //         assertEquals(
+    //                 timestamp,
+    //                 ledgerView.timestamp());
+
+    //         assertEquals(
+    //                 aggregateCommitmentHex(
+    //                         completeBatchRecord),
+    //                 ledgerView
+    //                         .aggregateCommitmentHex());
+
+    //         assertEquals(
+    //                 scalarHex(
+    //                         pp,
+    //                         completeBatchRecord
+    //                                 .getAggregateSignature()
+    //                                 .getAggregateResponse()),
+    //                 ledgerView
+    //                         .aggregateResponseHex());
+
+    //         assertEquals(
+    //                 HEX.formatHex(
+    //                         completeBatchRecord.getMu()),
+    //                 ledgerView.muHex());
+
+    //         assertEquals(
+    //                 cid,
+    //                 ledgerView.cid());
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 14. Reconstruct BRec from real ledger data
+    //          * -------------------------------------------------
+    //          */
+
+    //         BatchRecord ledgerBatchRecord =
+    //                 toBatchRecord(
+    //                         pp,
+    //                         ledgerView);
+
+    //         assertEquals(
+    //                 completeBatchRecord,
+    //                 ledgerBatchRecord);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 15. Download Pkg using the CID stored on-chain
+    //          * -------------------------------------------------
+    //          */
+
+    //         byte[] ledgerReferencedPackage =
+    //                 ipfsClient.get(
+    //                         ledgerBatchRecord.getCid());
+
+    //         assertArrayEquals(
+    //                 packageBytes,
+    //                 ledgerReferencedPackage);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 16. Decode the downloaded real package
+    //          * -------------------------------------------------
+    //          */
+
+    //         PackageCodec.DecodedPackage
+    //                 decodedPackage =
+    //                 PackageCodec.decode(
+    //                         pp,
+    //                         ledgerReferencedPackage);
+
+    //         assertNotNull(
+    //                 decodedPackage.formatVersion());
+
+    //         assertFalse(
+    //                 decodedPackage
+    //                         .formatVersion()
+    //                         .isBlank());
+
+    //         assertEquals(
+    //                 batchId,
+    //                 decodedPackage.batchId());
+
+    //         assertEquals(
+    //                 timestamp,
+    //                 decodedPackage.timestamp());
+
+    //         assertEquals(
+    //                 2,
+    //                 decodedPackage
+    //                         .packageEntries()
+    //                         .size());
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 17. Verify the aggregate signature using:
+    //          *
+    //          *     on-chain BRec
+    //          *     +
+    //          *     IPFS Pkg
+    //          *     +
+    //          *     registered public keys
+    //          * -------------------------------------------------
+    //          */
+
+    //         assertTrue(
+    //                 AggVerify.verify(
+    //                         pp,
+    //                         registry,
+    //                         ledgerBatchRecord,
+    //                         decodedPackage
+    //                                 .packageEntries()),
+    //                 "AggVerify rejected the ledger/IPFS pair");
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 18. Recover the public report
+    //          * -------------------------------------------------
+    //          */
+
+    //         byte[] recoveredPublic =
+    //                 Recovery.recover(
+    //                                 pp,
+    //                                 registry,
+    //                                 recoveryKey,
+    //                                 ledgerBatchRecord,
+    //                                 decodedPackage
+    //                                         .packageEntries(),
+    //                                 publicDevice.getDeviceId(),
+    //                                 publicSignedReport
+    //                                         .getSignature()
+    //                                         .getR())
+    //                         .orElseThrow(
+    //                                 () ->
+    //                                         new AssertionError(
+    //                                                 "Public report "
+    //                                                         + "recovery failed"));
+
+    //         assertArrayEquals(
+    //                 publicPlaintext,
+    //                 recoveredPublic);
+
+    //         /*
+    //          * -------------------------------------------------
+    //          * 19. Recover and decrypt the sensitive report
+    //          * -------------------------------------------------
+    //          */
+
+    //         byte[] recoveredSensitive =
+    //                 Recovery.recover(
+    //                                 pp,
+    //                                 registry,
+    //                                 recoveryKey,
+    //                                 ledgerBatchRecord,
+    //                                 decodedPackage
+    //                                         .packageEntries(),
+    //                                 sensitiveDevice.getDeviceId(),
+    //                                 sensitiveSignedReport
+    //                                         .getSignature()
+    //                                         .getR())
+    //                         .orElseThrow(
+    //                                 () ->
+    //                                         new AssertionError(
+    //                                                 "Sensitive report "
+    //                                                         + "recovery failed"));
+
+    //         assertArrayEquals(
+    //                 sensitivePlaintext,
+    //                 recoveredSensitive);
+
+    //         /*
+    //          * Actual runtime values, not expected placeholders.
+    //          */
+    //         System.out.println();
+    //         System.out.println(
+    //                 "========== BASR Fabric E2E ==========");
+
+    //         System.out.println(
+    //                 "publicDeviceId    = "
+    //                         + publicDeviceId);
+
+    //         System.out.println(
+    //                 "sensitiveDeviceId = "
+    //                         + sensitiveDeviceId);
+
+    //         System.out.println(
+    //                 "batchId           = "
+    //                         + batchId);
+
+    //         System.out.println(
+    //                 "cid               = "
+    //                         + cid);
+
+    //         System.out.println(
+    //                 "packageBytes      = "
+    //                         + packageBytes.length);
+
+    //         System.out.println(
+    //                 "AggVerify         = PASS");
+
+    //         System.out.println(
+    //                 "publicRecovery    = "
+    //                         + new String(
+    //                                 recoveredPublic,
+    //                                 StandardCharsets.UTF_8));
+
+    //         System.out.println(
+    //                 "sensitiveRecovery = "
+    //                         + new String(
+    //                                 recoveredSensitive,
+    //                                 StandardCharsets.UTF_8));
+
+    //         System.out.println(
+    //                 "====================================");
+
+    //         System.out.println();
+    //     }
+    // }
+
     @Test
     @Timeout(
             value = 2,
-            unit = TimeUnit.MINUTES
-    )
+            unit = TimeUnit.MINUTES)
     void completeRealFabricIpfsWorkflow()
             throws Exception {
-
-        /*
-         * -----------------------------------------------------
-         * 1. Setup
-         * -----------------------------------------------------
-         */
 
         PublicParams pp =
                 Setup.setup(
                         SECURITY_PARAMETER);
 
-        IpfsClient ipfsClient =
+        IpfsClient ipfs =
                 new KuboHttpIpfsClient();
 
         assertTrue(
-                ipfsClient.isAvailable(),
-                "Kubo RPC is unavailable at "
-                        + KuboHttpIpfsClient.DEFAULT_RPC_URI);
-
-        // InMemoryDeviceRegistry registry =
-        //         new InMemoryDeviceRegistry();
+                ipfs.isAvailable());
 
         String runId =
                 uniqueRunId();
 
         String publicDeviceId =
-                "fabric-public-" + runId;
+                "service-public-" + runId;
 
         String sensitiveDeviceId =
-                "fabric-sensitive-" + runId;
+                "service-sensitive-" + runId;
 
         String batchId =
-                "fabric-batch-" + runId;
+                "service-batch-" + runId;
 
         byte[] publicPlaintext =
                 (
-                        "temperature=23.7;"
-                                + "run="
+                        "temperature=23.7;run="
                                 + runId
                 ).getBytes(
                         StandardCharsets.UTF_8);
 
         byte[] sensitivePlaintext =
                 (
-                        "confidential-pressure=82.2;"
-                                + "run="
+                        "confidential-pressure=82.2;run="
                                 + runId
                 ).getBytes(
                         StandardCharsets.UTF_8);
 
-        /*
-         * -----------------------------------------------------
-         * 2. Connect to the real Org1 Fabric Gateway
-         * -----------------------------------------------------
-         */
-
         try (FabricGatewayClient gateway =
-                     FabricGatewayClient
-                             .connectLocalTestNetwork()) {
+                    FabricGatewayClient
+                            .connectLocalTestNetwork()) {
 
-            FabricDeviceRegistry registry =
-                    new FabricDeviceRegistry(
+            BasrWorkflowService service =
+                    new BasrWorkflowService(
                             pp,
-                            gateway);
-
-            assertEquals(
-                    "basr",
-                    gateway.getChaincodeName());
-
-            assertEquals(
-                    "basr",
-                    gateway.getContractName());
-
-            /*
-             * -------------------------------------------------
-             * 3. Generate and register the public device
-             * -------------------------------------------------
-             */
+                            gateway,
+                            ipfs);
 
             Device publicDevice =
-                    registerDevice(
-                            pp,
-                            registry,
-                            gateway,
+                    service.registerDevice(
                             publicDeviceId);
 
-            /*
-             * -------------------------------------------------
-             * 4. Generate and register the sensitive device
-             * -------------------------------------------------
-             */
-
             Device sensitiveDevice =
-                    registerDevice(
-                            pp,
-                            registry,
-                            gateway,
+                    service.registerDevice(
                             sensitiveDeviceId);
 
-            Collection<RegisteredDevice> allDevices =
-                    registry.findAll();
-
-            assertTrue(
-                    allDevices.stream()
-                            .anyMatch(
-                                    device ->
-                                            publicDeviceId.equals(
-                                                    device.getDeviceId())));
-
-            assertTrue(
-                    allDevices.stream()
-                            .anyMatch(
-                                    device ->
-                                            sensitiveDeviceId.equals(
-                                                    device.getDeviceId())));
-
-            /*
-            * Fabric 账本中可能已有以前 E2E 测试注册的数据，
-            * 因此不能断言 size == 2。
-            */
-            assertTrue(
-                    registry.size() >= 2);
-
-            /*
-             * -------------------------------------------------
-             * 5. Generate the real DR X25519 recovery key
-             * -------------------------------------------------
-             */
-
             RecoveryKey recoveryKey =
-                    RecKeyGen.generate(pp);
+                    service.generateRecoveryKey();
 
-            assertNotNull(
-                    recoveryKey.getSecretKey());
-
-            assertNotNull(
-                    recoveryKey.getPublicKey());
-
-            /*
-             * The same timestamp is used for all reports in
-             * this batch.
-             */
             long timestamp =
                     Instant.now()
                             .toEpochMilli();
 
-            /*
-             * -------------------------------------------------
-             * 6. Sign one public report, beta = 0
-             * -------------------------------------------------
-             */
-
-            SignedReport publicSignedReport =
-                    Sign.sign(
-                            pp,
-                            recoveryKey.getPublicKey(),
+            SignedReport publicReport =
+                    service.signPublicReport(
                             publicDevice,
+                            recoveryKey,
                             publicPlaintext,
-                            PUBLIC_REPORT,
                             batchId,
                             timestamp);
 
-            /*
-             * -------------------------------------------------
-             * 7. Sign one sensitive report, beta = 1
-             * -------------------------------------------------
-             */
-
-            SignedReport sensitiveSignedReport =
-                    Sign.sign(
-                            pp,
-                            recoveryKey.getPublicKey(),
+            SignedReport sensitiveReport =
+                    service.signSensitiveReport(
                             sensitiveDevice,
+                            recoveryKey,
                             sensitivePlaintext,
-                            SENSITIVE_REPORT,
                             batchId,
                             timestamp);
 
-            /*
-             * -------------------------------------------------
-             * 8. Aggregate real signed reports
-             * -------------------------------------------------
-             */
+            BasrWorkflowService.PublishedBatch
+                    published =
+                    service.aggregateAndPublish(
+                            List.of(
+                                    publicReport,
+                                    sensitiveReport),
+                            batchId,
+                            timestamp);
 
-            Aggregate.Result aggregateResult =
-                    Aggregate.aggregate(
-                                    pp,
-                                    registry,
-                                    List.of(
-                                            publicSignedReport,
-                                            sensitiveSignedReport),
-                                    batchId,
-                                    timestamp)
-                            .orElseThrow(
-                                    () ->
-                                            new AssertionError(
-                                                    "Aggregate rejected "
-                                                            + "valid reports"));
-
-            BatchRecord localBatchRecord =
-                    aggregateResult
-                            .batchRecord();
-
-            assertFalse(
-                    localBatchRecord.hasCid());
-
-            /*
-             * -------------------------------------------------
-             * 9. Deterministically encode Pkg
-             * -------------------------------------------------
-             */
-
-            byte[] packageBytes =
-                    PackageCodec.encode(
-                            pp,
-                            aggregateResult);
-
-            assertTrue(
-                    packageBytes.length > 0);
-
-            /*
-             * -------------------------------------------------
-             * 10. Upload the real Pkg to Kubo
-             * -------------------------------------------------
-             */
-
-            String cid =
-                    ipfsClient.put(
-                            packageBytes);
-
-            assertNotNull(cid);
-            assertFalse(cid.isBlank());
-
-            /*
-             * Verify that the returned CID resolves to exactly
-             * the uploaded deterministic package bytes.
-             */
-            byte[] immediateDownload =
-                    ipfsClient.get(cid);
-
-            assertArrayEquals(
-                    packageBytes,
-                    immediateDownload);
-
-            /*
-             * -------------------------------------------------
-             * 11. Complete BRec with the real CID
-             * -------------------------------------------------
-             */
-
-            BatchRecord completeBatchRecord =
-                    localBatchRecord
-                            .withCid(cid);
-
-            assertTrue(
-                    completeBatchRecord.hasCid());
-
-            assertEquals(
-                    cid,
-                    completeBatchRecord.getCid());
-
-            /*
-             * -------------------------------------------------
-             * 12. Submit BRec to real Fabric
-             * -------------------------------------------------
-             */
-
-            assertTrue(
-                    gateway.createBatchRecord(
-                            pp,
-                            completeBatchRecord,
-                            cid));
-
-            /*
-             * -------------------------------------------------
-             * 13. Read BRec back from basrchannel
-             * -------------------------------------------------
-             */
-
-            FabricGatewayClient.BatchRecordView
-                    ledgerView =
-                    gateway.readBatchRecord(
+            BasrWorkflowService.VerifiedBatch
+                    verified =
+                    service.verifyPublishedBatch(
                             batchId);
 
-            assertEquals(
-                    batchId,
-                    ledgerView.batchId());
-
-            assertEquals(
-                    timestamp,
-                    ledgerView.timestamp());
-
-            assertEquals(
-                    aggregateCommitmentHex(
-                            completeBatchRecord),
-                    ledgerView
-                            .aggregateCommitmentHex());
-
-            assertEquals(
-                    scalarHex(
-                            pp,
-                            completeBatchRecord
-                                    .getAggregateSignature()
-                                    .getAggregateResponse()),
-                    ledgerView
-                            .aggregateResponseHex());
-
-            assertEquals(
-                    HEX.formatHex(
-                            completeBatchRecord.getMu()),
-                    ledgerView.muHex());
-
-            assertEquals(
-                    cid,
-                    ledgerView.cid());
-
-            /*
-             * -------------------------------------------------
-             * 14. Reconstruct BRec from real ledger data
-             * -------------------------------------------------
-             */
-
-            BatchRecord ledgerBatchRecord =
-                    toBatchRecord(
-                            pp,
-                            ledgerView);
-
-            assertEquals(
-                    completeBatchRecord,
-                    ledgerBatchRecord);
-
-            /*
-             * -------------------------------------------------
-             * 15. Download Pkg using the CID stored on-chain
-             * -------------------------------------------------
-             */
-
-            byte[] ledgerReferencedPackage =
-                    ipfsClient.get(
-                            ledgerBatchRecord.getCid());
-
-            assertArrayEquals(
-                    packageBytes,
-                    ledgerReferencedPackage);
-
-            /*
-             * -------------------------------------------------
-             * 16. Decode the downloaded real package
-             * -------------------------------------------------
-             */
-
-            PackageCodec.DecodedPackage
-                    decodedPackage =
-                    PackageCodec.decode(
-                            pp,
-                            ledgerReferencedPackage);
-
-            assertNotNull(
-                    decodedPackage.formatVersion());
-
-            assertFalse(
-                    decodedPackage
-                            .formatVersion()
-                            .isBlank());
-
-            assertEquals(
-                    batchId,
-                    decodedPackage.batchId());
-
-            assertEquals(
-                    timestamp,
-                    decodedPackage.timestamp());
-
-            assertEquals(
-                    2,
-                    decodedPackage
-                            .packageEntries()
-                            .size());
-
-            /*
-             * -------------------------------------------------
-             * 17. Verify the aggregate signature using:
-             *
-             *     on-chain BRec
-             *     +
-             *     IPFS Pkg
-             *     +
-             *     registered public keys
-             * -------------------------------------------------
-             */
-
-            assertTrue(
-                    AggVerify.verify(
-                            pp,
-                            registry,
-                            ledgerBatchRecord,
-                            decodedPackage
-                                    .packageEntries()),
-                    "AggVerify rejected the ledger/IPFS pair");
-
-            /*
-             * -------------------------------------------------
-             * 18. Recover the public report
-             * -------------------------------------------------
-             */
-
             byte[] recoveredPublic =
-                    Recovery.recover(
-                                    pp,
-                                    registry,
-                                    recoveryKey,
-                                    ledgerBatchRecord,
-                                    decodedPackage
-                                            .packageEntries(),
-                                    publicDevice.getDeviceId(),
-                                    publicSignedReport
-                                            .getSignature()
-                                            .getR())
-                            .orElseThrow(
-                                    () ->
-                                            new AssertionError(
-                                                    "Public report "
-                                                            + "recovery failed"));
+                    service.recoverReport(
+                            recoveryKey,
+                            verified,
+                            publicDeviceId,
+                            publicReport
+                                    .getSignature()
+                                    .getR());
+
+            byte[] recoveredSensitive =
+                    service.recoverReport(
+                            recoveryKey,
+                            verified,
+                            sensitiveDeviceId,
+                            sensitiveReport
+                                    .getSignature()
+                                    .getR());
 
             assertArrayEquals(
                     publicPlaintext,
                     recoveredPublic);
 
-            /*
-             * -------------------------------------------------
-             * 19. Recover and decrypt the sensitive report
-             * -------------------------------------------------
-             */
-
-            byte[] recoveredSensitive =
-                    Recovery.recover(
-                                    pp,
-                                    registry,
-                                    recoveryKey,
-                                    ledgerBatchRecord,
-                                    decodedPackage
-                                            .packageEntries(),
-                                    sensitiveDevice.getDeviceId(),
-                                    sensitiveSignedReport
-                                            .getSignature()
-                                            .getR())
-                            .orElseThrow(
-                                    () ->
-                                            new AssertionError(
-                                                    "Sensitive report "
-                                                            + "recovery failed"));
-
             assertArrayEquals(
                     sensitivePlaintext,
                     recoveredSensitive);
 
-            /*
-             * Actual runtime values, not expected placeholders.
-             */
+            assertEquals(
+                    published.cid(),
+                    verified.batchRecord()
+                            .getCid());
+
             System.out.println();
             System.out.println(
-                    "========== BASR Fabric E2E ==========");
+                    "========== BASR Application E2E ==========");
 
             System.out.println(
                     "publicDeviceId    = "
@@ -564,11 +742,11 @@ class BasrFabricEndToEndTest {
 
             System.out.println(
                     "cid               = "
-                            + cid);
+                            + published.cid());
 
             System.out.println(
                     "packageBytes      = "
-                            + packageBytes.length);
+                            + published.packageSize());
 
             System.out.println(
                     "AggVerify         = PASS");
@@ -586,9 +764,251 @@ class BasrFabricEndToEndTest {
                                     StandardCharsets.UTF_8));
 
             System.out.println(
-                    "====================================");
-
+                    "==========================================");
             System.out.println();
+        }
+    }
+
+    @Test
+    @Timeout(
+            value = 2,
+            unit = TimeUnit.MINUTES)
+    void unregisteredDeviceReportMustBeRejected()
+            throws Exception {
+
+        PublicParams pp =
+                Setup.setup(
+                        SECURITY_PARAMETER);
+
+        String runId =
+                uniqueRunId();
+
+        String deviceId =
+                "unregistered-" + runId;
+
+        String batchId =
+                "unregistered-batch-" + runId;
+
+        long timestamp =
+                Instant.now()
+                        .toEpochMilli();
+
+        /*
+        * 生成真实设备密钥，但不向 Fabric 注册。
+        */
+        Device unregisteredDevice =
+                Registration.generateDevice(
+                        pp,
+                        deviceId);
+
+        RecoveryKey recoveryKey =
+                RecKeyGen.generate(pp);
+
+        SignedReport signedReport =
+                Sign.sign(
+                        pp,
+                        recoveryKey.getPublicKey(),
+                        unregisteredDevice,
+                        (
+                                "unregistered-data="
+                                        + runId
+                        ).getBytes(
+                                StandardCharsets.UTF_8),
+                        PUBLIC_REPORT,
+                        batchId,
+                        timestamp);
+
+        try (FabricGatewayClient gateway =
+                    FabricGatewayClient
+                            .connectLocalTestNetwork()) {
+
+            FabricDeviceRegistry registry =
+                    new FabricDeviceRegistry(
+                            pp,
+                            gateway);
+
+            assertFalse(
+                    registry.containsDeviceId(
+                            deviceId));
+
+            assertFalse(
+                    registry.contains(
+                            deviceId,
+                            unregisteredDevice
+                                    .getPublicKey()));
+
+            /*
+            * 该批次只有一个未注册设备报告。
+            * 过滤后不存在任何有效报告，Aggregate 必须拒绝。
+            */
+            assertTrue(
+                    Aggregate.aggregate(
+                                    pp,
+                                    registry,
+                                    List.of(
+                                            signedReport),
+                                    batchId,
+                                    timestamp)
+                            .isEmpty(),
+                    "Aggregate accepted a report "
+                            + "from an unregistered device");
+        }
+    }
+
+    @Test
+    @Timeout(
+            value = 2,
+            unit = TimeUnit.MINUTES)
+    void registeredDeviceIdWithWrongPublicKeyMustBeRejected()
+            throws Exception {
+
+        PublicParams pp =
+                Setup.setup(
+                        SECURITY_PARAMETER);
+
+        String runId =
+                uniqueRunId();
+
+        String registeredDeviceId =
+                "registered-pair-" + runId;
+
+        String differentDeviceId =
+                "different-key-" + runId;
+
+        try (FabricGatewayClient gateway =
+                    FabricGatewayClient
+                            .connectLocalTestNetwork()) {
+
+            FabricDeviceRegistry registry =
+                    new FabricDeviceRegistry(
+                            pp,
+                            gateway);
+
+            Device registeredDevice =
+                    registerDevice(
+                            pp,
+                            registry,
+                            gateway,
+                            registeredDeviceId);
+
+            /*
+            * 生成另一对真实密钥，但不注册。
+            */
+            Device differentDevice =
+                    Registration.generateDevice(
+                            pp,
+                            differentDeviceId);
+
+            assertTrue(
+                    registry.contains(
+                            registeredDeviceId,
+                            registeredDevice
+                                    .getPublicKey()));
+
+            assertFalse(
+                    registry.contains(
+                            registeredDeviceId,
+                            differentDevice
+                                    .getPublicKey()),
+                    "Registry accepted a valid device ID "
+                            + "combined with a different key");
+
+            assertFalse(
+                    gateway.isRegisteredDevice(
+                            registeredDeviceId,
+                            differentDevice
+                                    .getPublicKey()),
+                    "Chaincode accepted a mismatched "
+                            + "(deviceId, publicKey) pair");
+        }
+    }
+
+    @Test
+    @Timeout(
+            value = 2,
+            unit = TimeUnit.MINUTES)
+    void closedGatewayMustFailClosedEvenAfterCacheWarmup()
+            throws Exception {
+
+        PublicParams pp =
+                Setup.setup(
+                        SECURITY_PARAMETER);
+
+        String runId =
+                uniqueRunId();
+
+        String deviceId =
+                "fail-closed-" + runId;
+
+        FabricGatewayClient gateway =
+                FabricGatewayClient
+                        .connectLocalTestNetwork();
+
+        try {
+            FabricDeviceRegistry registry =
+                    new FabricDeviceRegistry(
+                            pp,
+                            gateway);
+
+            Device device =
+                    registerDevice(
+                            pp,
+                            registry,
+                            gateway,
+                            deviceId);
+
+            /*
+            * 先完成成功查询，确保正向缓存已经被填充。
+            */
+            assertTrue(
+                    registry.containsDeviceId(
+                            deviceId));
+
+            assertTrue(
+                    registry.contains(
+                            deviceId,
+                            device.getPublicKey()));
+
+            assertTrue(
+                    registry.findByDeviceId(
+                                    deviceId)
+                            .isPresent());
+
+            /*
+            * 主动关闭真实 Fabric Gateway。
+            */
+            gateway.close();
+
+            /*
+            * 即使缓存已预热，也不得继续返回 true。
+            */
+            assertThrows(
+                    RegistryAccessException.class,
+                    () ->
+                            registry.contains(
+                                    deviceId,
+                                    device.getPublicKey()),
+                    "Registry fell back to cached "
+                            + "authorization after Gateway closure");
+
+            assertThrows(
+                    RegistryAccessException.class,
+                    () ->
+                            registry.containsDeviceId(
+                                    deviceId));
+
+            assertThrows(
+                    RegistryAccessException.class,
+                    () ->
+                            registry.findByDeviceId(
+                                    deviceId));
+
+        } finally {
+            /*
+            * FabricGatewayClient.close() 应当可重复调用；
+            * 确保测试异常时连接仍被释放。
+            */
+            gateway.close();
         }
     }
 

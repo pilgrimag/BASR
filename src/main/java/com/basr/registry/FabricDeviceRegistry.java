@@ -87,6 +87,33 @@ public final class FabricDeviceRegistry
      * Checks whether an ID exists in the authoritative Fabric
      * world state.
      */
+    // @Override
+    // public boolean containsDeviceId(
+    //         final String deviceId) {
+
+    //     if (!validDeviceId(deviceId)) {
+    //         return false;
+    //     }
+
+    //     if (devicesById.containsKey(
+    //             deviceId)) {
+
+    //         return true;
+    //     }
+
+    //     try {
+    //         return gateway.deviceExists(
+    //                 deviceId);
+
+    //     } catch (GatewayException exception) {
+
+    //         throw registryFailure(
+    //                 "Failed to query device ID: "
+    //                         + deviceId,
+    //                 exception);
+    //     }
+    // }
+
     @Override
     public boolean containsDeviceId(
             final String deviceId) {
@@ -95,17 +122,28 @@ public final class FabricDeviceRegistry
             return false;
         }
 
-        if (devicesById.containsKey(
-                deviceId)) {
-
-            return true;
-        }
-
         try {
-            return gateway.deviceExists(
-                    deviceId);
+            /*
+            * 即使存在正向缓存，也必须进行实时链上查询。
+            * Fabric 不可达时必须失败关闭。
+            */
+            return gateway.deviceExists(deviceId);
 
         } catch (GatewayException exception) {
+
+            throw registryFailure(
+                    "Failed to query device ID: "
+                            + deviceId,
+                    exception);
+
+        } catch (RuntimeException exception) {
+
+            if (exception
+                    instanceof RegistryAccessException
+                    registryAccessException) {
+
+                throw registryAccessException;
+            }
 
             throw registryFailure(
                     "Failed to query device ID: "
@@ -118,6 +156,36 @@ public final class FabricDeviceRegistry
      * Checks whether a public key exists using the Chaincode
      * public-key uniqueness index.
      */
+    // @Override
+    // public boolean containsPublicKey(
+    //         final ECPoint publicKey) {
+
+    //     if (!validPublicKey(publicKey)) {
+    //         return false;
+    //     }
+
+    //     String key =
+    //             publicKeyKey(
+    //                     publicKey);
+
+    //     if (deviceIdByPublicKey
+    //             .containsKey(key)) {
+
+    //         return true;
+    //     }
+
+    //     try {
+    //         return gateway.publicKeyExists(
+    //                 publicKey);
+
+    //     } catch (GatewayException exception) {
+
+    //         throw registryFailure(
+    //                 "Failed to query device public key",
+    //                 exception);
+    //     }
+    // }
+
     @Override
     public boolean containsPublicKey(
             final ECPoint publicKey) {
@@ -126,21 +194,26 @@ public final class FabricDeviceRegistry
             return false;
         }
 
-        String key =
-                publicKeyKey(
-                        publicKey);
-
-        if (deviceIdByPublicKey
-                .containsKey(key)) {
-
-            return true;
-        }
-
         try {
-            return gateway.publicKeyExists(
-                    publicKey);
+            /*
+            * 不允许仅依据本地正向缓存接受公钥。
+            */
+            return gateway.publicKeyExists(publicKey);
 
         } catch (GatewayException exception) {
+
+            throw registryFailure(
+                    "Failed to query device public key",
+                    exception);
+
+        } catch (RuntimeException exception) {
+
+            if (exception
+                    instanceof RegistryAccessException
+                    registryAccessException) {
+
+                throw registryAccessException;
+            }
 
             throw registryFailure(
                     "Failed to query device public key",
@@ -153,6 +226,58 @@ public final class FabricDeviceRegistry
      *
      *     (ID_i, pk_i) in L
      */
+    // @Override
+    // public boolean contains(
+    //         final String deviceId,
+    //         final ECPoint publicKey) {
+
+    //     if (!validDeviceId(deviceId)
+    //             || !validPublicKey(publicKey)) {
+
+    //         return false;
+    //     }
+
+    //     RegisteredDevice cached =
+    //             devicesById.get(
+    //                     deviceId);
+
+    //     if (cached != null) {
+
+    //         return publicKeyKey(
+    //                 cached.getPublicKey())
+    //                 .equals(
+    //                         publicKeyKey(
+    //                                 publicKey));
+    //     }
+
+    //     try {
+    //         boolean exists =
+    //                 gateway.isRegisteredDevice(
+    //                         deviceId,
+    //                         publicKey);
+
+    //         if (exists) {
+
+    //             RegisteredDevice device =
+    //                     new RegisteredDevice(
+    //                             deviceId,
+    //                             publicKey.normalize());
+
+    //             cachePositive(device);
+    //         }
+
+    //         return exists;
+
+    //     } catch (GatewayException exception) {
+
+    //         throw registryFailure(
+    //                 "Failed to query exact "
+    //                         + "device registration: "
+    //                         + deviceId,
+    //                 exception);
+    //     }
+    // }
+
     @Override
     public boolean contains(
             final String deviceId,
@@ -164,20 +289,12 @@ public final class FabricDeviceRegistry
             return false;
         }
 
-        RegisteredDevice cached =
-                devicesById.get(
-                        deviceId);
-
-        if (cached != null) {
-
-            return publicKeyKey(
-                    cached.getPublicKey())
-                    .equals(
-                            publicKeyKey(
-                                    publicKey));
-        }
-
         try {
+            /*
+            * 精确成员关系判断必须以 Fabric 世界状态为准：
+            *
+            *     (ID_i, pk_i) in L
+            */
             boolean exists =
                     gateway.isRegisteredDevice(
                             deviceId,
@@ -185,12 +302,10 @@ public final class FabricDeviceRegistry
 
             if (exists) {
 
-                RegisteredDevice device =
+                cachePositive(
                         new RegisteredDevice(
                                 deviceId,
-                                publicKey.normalize());
-
-                cachePositive(device);
+                                publicKey.normalize()));
             }
 
             return exists;
@@ -198,8 +313,23 @@ public final class FabricDeviceRegistry
         } catch (GatewayException exception) {
 
             throw registryFailure(
-                    "Failed to query exact "
-                            + "device registration: "
+                    "Failed to query exact device "
+                            + "registration: "
+                            + deviceId,
+                    exception);
+
+        } catch (RuntimeException exception) {
+
+            if (exception
+                    instanceof RegistryAccessException
+                    registryAccessException) {
+
+                throw registryAccessException;
+            }
+
+            throw registryFailure(
+                    "Failed to query exact device "
+                            + "registration: "
                             + deviceId,
                     exception);
         }
@@ -208,6 +338,79 @@ public final class FabricDeviceRegistry
     /**
      * Reads and decodes the registered secp256k1 public key.
      */
+    // @Override
+    // public Optional<RegisteredDevice>
+    // findByDeviceId(
+    //         final String deviceId) {
+
+    //     if (!validDeviceId(deviceId)) {
+    //         return Optional.empty();
+    //     }
+
+    //     RegisteredDevice cached =
+    //             devicesById.get(
+    //                     deviceId);
+
+    //     if (cached != null) {
+
+    //         return Optional.of(
+    //                 cached);
+    //     }
+
+    //     try {
+    //         /*
+    //          * Avoid using ReadDevice exceptions as normal
+    //          * not-found control flow.
+    //          */
+    //         if (!gateway.deviceExists(
+    //                 deviceId)) {
+
+    //             return Optional.empty();
+    //         }
+
+    //         FabricGatewayClient.DeviceAssetView
+    //                 view =
+    //                 gateway.readDevice(
+    //                         deviceId);
+
+    //         RegisteredDevice device =
+    //                 decodeDevice(view);
+
+    //         if (!deviceId.equals(
+    //                 device.getDeviceId())) {
+
+    //             throw new RegistryAccessException(
+    //                     "Ledger returned a different "
+    //                             + "device ID: expected "
+    //                             + deviceId
+    //                             + ", received "
+    //                             + device.getDeviceId());
+    //         }
+
+    //         cachePositive(device);
+
+    //         return Optional.of(device);
+
+    //     } catch (GatewayException
+    //              | IOException exception) {
+
+    //         throw registryFailure(
+    //                 "Failed to read registered device: "
+    //                         + deviceId,
+    //                 exception);
+
+    //     } catch (RegistryAccessException exception) {
+    //         throw exception;
+
+    //     } catch (RuntimeException exception) {
+
+    //         throw registryFailure(
+    //                 "Invalid device record returned by Fabric: "
+    //                         + deviceId,
+    //                 exception);
+    //     }
+    // }
+
     @Override
     public Optional<RegisteredDevice>
     findByDeviceId(
@@ -217,31 +420,24 @@ public final class FabricDeviceRegistry
             return Optional.empty();
         }
 
-        RegisteredDevice cached =
-                devicesById.get(
-                        deviceId);
-
-        if (cached != null) {
-
-            return Optional.of(
-                    cached);
-        }
-
         try {
             /*
-             * Avoid using ReadDevice exceptions as normal
-             * not-found control flow.
-             */
-            if (!gateway.deviceExists(
-                    deviceId)) {
-
+            * 先实时确认链上记录存在。
+            * Gateway 不可用时不能返回缓存结果。
+            */
+            if (!gateway.deviceExists(deviceId)) {
                 return Optional.empty();
             }
 
-            FabricGatewayClient.DeviceAssetView
-                    view =
-                    gateway.readDevice(
-                            deviceId);
+            RegisteredDevice cached =
+                    devicesById.get(deviceId);
+
+            if (cached != null) {
+                return Optional.of(cached);
+            }
+
+            FabricGatewayClient.DeviceAssetView view =
+                    gateway.readDevice(deviceId);
 
             RegisteredDevice device =
                     decodeDevice(view);
@@ -262,7 +458,7 @@ public final class FabricDeviceRegistry
             return Optional.of(device);
 
         } catch (GatewayException
-                 | IOException exception) {
+                | IOException exception) {
 
             throw registryFailure(
                     "Failed to read registered device: "
@@ -270,12 +466,14 @@ public final class FabricDeviceRegistry
                     exception);
 
         } catch (RegistryAccessException exception) {
+
             throw exception;
 
         } catch (RuntimeException exception) {
 
             throw registryFailure(
-                    "Invalid device record returned by Fabric: "
+                    "Invalid device record returned "
+                            + "by Fabric: "
                             + deviceId,
                     exception);
         }

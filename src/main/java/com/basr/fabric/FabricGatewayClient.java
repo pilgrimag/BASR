@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import java.util.Arrays;
 
 /**
  * BASR Fabric Gateway client.
@@ -76,6 +77,15 @@ public final class FabricGatewayClient
 
     private static final String READ_BATCH_RECORD =
             "ReadBatchRecord";
+
+    private static final String DEVICE_EXISTS =
+            "DeviceExists";
+
+    private static final String PUBLIC_KEY_EXISTS =
+            "PublicKeyExists";
+
+    private static final String GET_ALL_DEVICES =
+            "GetAllDevices";
 
     private static final HexFormat HEX =
             HexFormat.of();
@@ -200,6 +210,69 @@ public final class FabricGatewayClient
 
             throw exception;
         }
+    }
+
+    /**
+     * 判断 deviceId 是否存在于链上注册表。
+     */
+    public boolean deviceExists(
+            final String deviceId)
+            throws GatewayException {
+
+        requireText(
+                deviceId,
+                "deviceId");
+
+        byte[] response =
+                contract.evaluateTransaction(
+                        DEVICE_EXISTS,
+                        deviceId);
+
+        return parseBooleanResponse(
+                DEVICE_EXISTS,
+                response);
+    }
+
+    /**
+     * 判断设备公钥是否已经存在于链上注册表。
+     */
+    public boolean publicKeyExists(
+            final ECPoint publicKey)
+            throws GatewayException {
+
+        Objects.requireNonNull(
+                publicKey,
+                "publicKey");
+
+        byte[] response =
+                contract.evaluateTransaction(
+                        PUBLIC_KEY_EXISTS,
+                        publicKeyHex(
+                                publicKey));
+
+        return parseBooleanResponse(
+                PUBLIC_KEY_EXISTS,
+                response);
+    }
+
+    /**
+     * 读取 Fabric 世界状态中的完整设备注册列表。
+     */
+    public List<DeviceAssetView> readAllDevices()
+            throws GatewayException,
+                   IOException {
+
+        byte[] response =
+                contract.evaluateTransaction(
+                        GET_ALL_DEVICES);
+
+        DeviceAssetView[] devices =
+                objectMapper.readValue(
+                        response,
+                        DeviceAssetView[].class);
+
+        return List.copyOf(
+                Arrays.asList(devices));
     }
 
     /**

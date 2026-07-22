@@ -20,7 +20,10 @@ import com.basr.fabric.FabricGatewayClient;
 import com.basr.ipfs.IpfsClient;
 import com.basr.ipfs.KuboHttpIpfsClient;
 import com.basr.persistence.PackageCodec;
-import com.basr.registry.InMemoryDeviceRegistry;
+// import com.basr.registry.InMemoryDeviceRegistry;
+import com.basr.entity.RegisteredDevice;
+import com.basr.registry.DeviceRegistry;
+import com.basr.registry.FabricDeviceRegistry;
 
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -35,6 +38,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,8 +106,8 @@ class BasrFabricEndToEndTest {
                 "Kubo RPC is unavailable at "
                         + KuboHttpIpfsClient.DEFAULT_RPC_URI);
 
-        InMemoryDeviceRegistry registry =
-                new InMemoryDeviceRegistry();
+        // InMemoryDeviceRegistry registry =
+        //         new InMemoryDeviceRegistry();
 
         String runId =
                 uniqueRunId();
@@ -143,6 +147,11 @@ class BasrFabricEndToEndTest {
                      FabricGatewayClient
                              .connectLocalTestNetwork()) {
 
+            FabricDeviceRegistry registry =
+                    new FabricDeviceRegistry(
+                            pp,
+                            gateway);
+
             assertEquals(
                     "basr",
                     gateway.getChaincodeName());
@@ -176,6 +185,30 @@ class BasrFabricEndToEndTest {
                             registry,
                             gateway,
                             sensitiveDeviceId);
+
+            Collection<RegisteredDevice> allDevices =
+                    registry.findAll();
+
+            assertTrue(
+                    allDevices.stream()
+                            .anyMatch(
+                                    device ->
+                                            publicDeviceId.equals(
+                                                    device.getDeviceId())));
+
+            assertTrue(
+                    allDevices.stream()
+                            .anyMatch(
+                                    device ->
+                                            sensitiveDeviceId.equals(
+                                                    device.getDeviceId())));
+
+            /*
+            * Fabric 账本中可能已有以前 E2E 测试注册的数据，
+            * 因此不能断言 size == 2。
+            */
+            assertTrue(
+                    registry.size() >= 2);
 
             /*
              * -------------------------------------------------
@@ -567,7 +600,8 @@ class BasrFabricEndToEndTest {
      */
     private static Device registerDevice(
             final PublicParams pp,
-            final InMemoryDeviceRegistry registry,
+            // final InMemoryDeviceRegistry registry,
+            final DeviceRegistry registry,
             final FabricGatewayClient gateway,
             final String deviceId)
             throws Exception {
@@ -626,12 +660,48 @@ class BasrFabricEndToEndTest {
          * supplies the algorithm module's existing registry
          * interface with the exact on-chain registration pair.
          */
+        // assertTrue(
+        //         Registration.verifyAndRegister(
+        //                         pp,
+        //                         registry,
+        //                         request)
+        //                 .isAccepted());
+
+        /*
+        * 直接从 FabricDeviceRegistry 读取权威链上状态。
+        */
+        RegisteredDevice registered =
+                registry.findByDeviceId(
+                                deviceId)
+                        .orElseThrow(
+                                () ->
+                                        new AssertionError(
+                                                "Fabric registry did "
+                                                        + "not return "
+                                                        + deviceId));
+
+        assertEquals(
+                deviceId,
+                registered.getDeviceId());
+
+        assertEquals(
+                publicKeyHex(
+                        device.getPublicKey()),
+                publicKeyHex(
+                        registered.getPublicKey()));
+
         assertTrue(
-                Registration.verifyAndRegister(
-                                pp,
-                                registry,
-                                request)
-                        .isAccepted());
+                registry.containsDeviceId(
+                        deviceId));
+
+        assertTrue(
+                registry.containsPublicKey(
+                        device.getPublicKey()));
+
+        assertTrue(
+                registry.contains(
+                        deviceId,
+                        device.getPublicKey()));
 
         return device;
     }

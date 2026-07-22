@@ -23,6 +23,12 @@ import org.hyperledger.fabric.contract.annotation.Transaction;
 import org.hyperledger.fabric.shim.ChaincodeException;
 import org.hyperledger.fabric.shim.ChaincodeStub;
 
+import org.hyperledger.fabric.shim.ledger.KeyValue;
+import org.hyperledger.fabric.shim.ledger.QueryResultsIterator;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
@@ -141,7 +147,9 @@ public final class BasrContract
 
         BATCH_ALREADY_EXISTS,
 
-        BATCH_NOT_FOUND
+        BATCH_NOT_FOUND,
+
+        STATE_QUERY_FAILED
     }
 
     /**
@@ -317,10 +325,36 @@ public final class BasrContract
     }
 
     /**
+     * 判断指定设备身份是否已经注册。
+     */
+    @Transaction(
+            intent = Transaction.TYPE.EVALUATE)
+    public boolean DeviceExists(
+            final Context ctx,
+            final String deviceId) {
+
+        Objects.requireNonNull(
+                ctx,
+                "ctx");
+
+        String canonicalDeviceId =
+                validateIdentifier(
+                        deviceId,
+                        "deviceId");
+
+        return stateExists(
+                ctx.getStub()
+                        .getStringState(
+                                deviceKey(
+                                        canonicalDeviceId)));
+    }
+
+    /**
      * 根据设备身份读取注册项。
      */
     @Transaction(
             intent = Transaction.TYPE.EVALUATE)
+            
     public DeviceAsset ReadDevice(
             final Context ctx,
             final String deviceId) {
@@ -396,6 +430,36 @@ public final class BasrContract
                 asset.getDeviceId())
                 && canonicalPublicKey.equals(
                         asset.getPublicKeyHex());
+    }
+
+    /**
+     * 判断指定 secp256k1 公钥是否已经注册。
+     *
+     * 直接使用 RegisterDevice 维护的：
+     *
+     *     DEVICE_PK:<pk_i> -> ID_i
+     *
+     * 唯一性索引。
+     */
+    @Transaction(
+            intent = Transaction.TYPE.EVALUATE)
+    public boolean PublicKeyExists(
+            final Context ctx,
+            final String publicKeyHex) {
+
+        Objects.requireNonNull(
+                ctx,
+                "ctx");
+
+        String canonicalPublicKey =
+                canonicalDevicePublicKey(
+                        publicKeyHex);
+
+        return stateExists(
+                ctx.getStub()
+                        .getStringState(
+                                publicKeyIndexKey(
+                                        canonicalPublicKey)));
     }
 
     /**
@@ -522,6 +586,77 @@ public final class BasrContract
         return genson.deserialize(
                 json,
                 BatchRecordAsset.class);
+    }
+
+    /**
+     * 返回当前链上注册列表中的全部设备。
+     *
+     * 只扫描：
+     *
+     *     DEVICE:<ID_i>
+     *
+     * 不返回：
+     *
+     *     DEVICE_PK:<pk_i>
+     */
+    @Transaction(
+            intent = Transaction.TYPE.EVALUATE)
+    public DeviceAsset[] GetAllDevices(
+            final Context ctx) {
+
+        Objects.requireNonNull(
+                ctx,
+                "ctx");
+
+        ChaincodeStub stub =
+                ctx.getStub();
+
+        List<DeviceAsset> devices =
+                new ArrayList<>();
+
+        String startKey =
+                DEVICE_PREFIX;
+
+        String endKey =
+                DEVICE_PREFIX + "\uffff";
+
+        try (QueryResultsIterator<KeyValue> results =
+                    stub.getStateByRange(
+                            startKey,
+                            endKey)) {
+
+            for (KeyValue result : results) {
+
+                String key =
+                        result.getKey();
+
+                /*
+                * 防御性检查：只接受 DEVICE: 命名空间。
+                */
+                if (!key.startsWith(
+                        DEVICE_PREFIX)) {
+
+                    continue;
+                }
+
+                DeviceAsset asset =
+                        genson.deserialize(
+                                result.getStringValue(),
+                                DeviceAsset.class);
+
+                devices.add(asset);
+            }
+
+        } catch (Exception exception) {
+
+            throw failure(
+                    ErrorCode.STATE_QUERY_FAILED,
+                    "Failed to query device registry: "
+                            + exception.getMessage());
+        }
+
+        return devices.toArray(
+                DeviceAsset[]::new);
     }
 
     /**

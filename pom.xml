@@ -39,6 +39,10 @@
         <jackson.version>
             2.21.3
         </jackson.version>
+
+        <fabric.gateway.version>1.10.0</fabric.gateway.version>
+        <grpc.version>1.76.0</grpc.version>
+        <protobuf.version>4.33.0</protobuf.version>
     </properties>
 
     <dependencies>
@@ -67,6 +71,25 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hyperledger.fabric</groupId>
+            <artifactId>fabric-gateway</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>1.76.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>4.33.0</version>
         </dependency>
 
     </dependencies>

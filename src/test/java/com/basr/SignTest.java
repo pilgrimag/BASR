@@ -276,6 +276,91 @@ class SignTest {
                         1000L));
     }
 
+    @Test
+    void measuredSigningShouldSeparateCryptoStages() {
+
+        byte[] publicMessage =
+                "public-measurement"
+                        .getBytes(
+                                StandardCharsets.UTF_8);
+
+        Sign.SignMeasurement publicMeasurement =
+                Sign.signMeasured(
+                        pp,
+                        recoveryKey.getPublicKey(),
+                        device,
+                        publicMessage,
+                        0,
+                        "batch-measurement-public",
+                        2000L);
+
+        assertNotNull(
+                publicMeasurement.signedReport());
+
+        assertEquals(
+                0L,
+                publicMeasurement.kemEncapNs());
+
+        assertEquals(
+                0L,
+                publicMeasurement.aeadEncryptNs());
+
+        assertTrue(
+                publicMeasurement.signatureNs() > 0L);
+
+        assertEquals(
+                publicMeasurement.signatureNs(),
+                publicMeasurement.cryptoTotalNs());
+
+        assertReportDigestAndSignatureValid(
+                publicMeasurement.signedReport());
+
+        byte[] sensitiveMessage =
+                "sensitive-measurement"
+                        .getBytes(
+                                StandardCharsets.UTF_8);
+
+        Sign.SignMeasurement sensitiveMeasurement =
+                Sign.signMeasured(
+                        pp,
+                        recoveryKey.getPublicKey(),
+                        device,
+                        sensitiveMessage,
+                        1,
+                        "batch-measurement-sensitive",
+                        3000L);
+
+        assertNotNull(
+                sensitiveMeasurement.signedReport());
+
+        assertTrue(
+                sensitiveMeasurement.kemEncapNs() > 0L);
+
+        assertTrue(
+                sensitiveMeasurement.aeadEncryptNs() > 0L);
+
+        assertTrue(
+                sensitiveMeasurement.signatureNs() > 0L);
+
+        long expectedPrivacyNs =
+                Math.addExact(
+                        sensitiveMeasurement.kemEncapNs(),
+                        sensitiveMeasurement.aeadEncryptNs());
+
+        assertEquals(
+                expectedPrivacyNs,
+                sensitiveMeasurement.privacyNs());
+
+        assertEquals(
+                Math.addExact(
+                        expectedPrivacyNs,
+                        sensitiveMeasurement.signatureNs()),
+                sensitiveMeasurement.cryptoTotalNs());
+
+        assertReportDigestAndSignatureValid(
+                sensitiveMeasurement.signedReport());
+    }
+
     private void assertReportDigestAndSignatureValid(
             SignedReport signedReport) {
 

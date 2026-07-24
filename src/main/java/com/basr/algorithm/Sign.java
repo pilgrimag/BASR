@@ -30,6 +30,58 @@ public final class Sign {
     }
 
     /**
+     * BASR 签名阶段的细分密码学计时。
+     *
+     * <p>所有时间均使用 {@link System#nanoTime()} 测量，
+     * 单位为纳秒。</p>
+     *
+     * @param signedReport 生成的完整签名报告
+     * @param kemEncapNs KEM 封装时间；公开报告为 0
+     * @param aeadEncryptNs AEAD 加密时间；公开报告为 0
+     * @param signatureNs 报告摘要与 Schnorr 签名生成时间
+     */
+    public record SignMeasurement(
+            SignedReport signedReport,
+            long kemEncapNs,
+            long aeadEncryptNs,
+            long signatureNs) {
+
+        public SignMeasurement {
+            Objects.requireNonNull(
+                    signedReport,
+                    "signedReport");
+
+            if (kemEncapNs < 0
+                    || aeadEncryptNs < 0
+                    || signatureNs < 0) {
+
+                throw new IllegalArgumentException(
+                        "Measured times cannot be negative");
+            }
+        }
+
+        /**
+         * 敏感数据保护时间：
+         * KEM.Encap + AEAD.Enc。
+         */
+        public long privacyNs() {
+            return Math.addExact(
+                    kemEncapNs,
+                    aeadEncryptNs);
+        }
+
+        /**
+         * 本方法覆盖的密码学总时间：
+         * privacy + digest/Schnorr signature。
+         */
+        public long cryptoTotalNs() {
+            return Math.addExact(
+                    privacyNs(),
+                    signatureNs);
+        }
+    }
+
+    /**
      * 执行设备报告签名。
      *
      * @param pp                系统公共参数
@@ -41,6 +93,29 @@ public final class Sign {
      * @param timestamp         时间戳 t
      */
     public static SignedReport sign(
+            PublicParams pp,
+            XECPublicKey recoveryPublicKey,
+            Device device,
+            byte[] rawReport,
+            int beta,
+            String batchId,
+            long timestamp) {
+
+        return signMeasured(
+                pp,
+                recoveryPublicKey,
+                device,
+                rawReport,
+                beta,
+                batchId,
+                timestamp)
+                .signedReport();
+    }
+
+    /**
+     * 执行设备报告签名，并返回各密码学子阶段的测量结果。
+     */
+    public static SignMeasurement signMeasured(
             PublicParams pp,
             XECPublicKey recoveryPublicKey,
             Device device,
@@ -75,6 +150,9 @@ public final class Sign {
         X25519Codec.requireX25519(
                 recoveryPublicKey);
 
+        long kemEncapNs = 0L;
+        long aeadEncryptNs = 0L;
+
         /*
          * 确保设备对象中的 pk_i 确实由 sk_i 导出。
          */
@@ -108,10 +186,16 @@ public final class Sign {
              * (RM_i, K_i) <-
              *      KEM.Encap(pp_KEM, pk_R)
              */
+            long kemStart =
+                    System.nanoTime();
+
             try (Kem.Encapsulation encapsulation =
                          Kem.encap(
                                  pp,
                                  recoveryPublicKey)) {
+
+                kemEncapNs =
+                        System.nanoTime() - kemStart;
 
                 recoveryMaterial =
                         encapsulation
@@ -145,12 +229,18 @@ public final class Sign {
                      *      AAD_i
                      * )
                      */
+                    long aeadStart =
+                            System.nanoTime();
+
                     data =
                             Aead.encrypt(
                                     pp,
                                     symmetricKey,
                                     rawReport,
                                     associatedData);
+
+                    aeadEncryptNs =
+                            System.nanoTime() - aeadStart;
 
                 } finally {
                     Arrays.fill(
@@ -178,6 +268,9 @@ public final class Sign {
          *
          * )
          */
+        long signatureStart =
+                System.nanoTime();
+
         BigInteger digest =
                 BasrTranscript.computeReportDigest(
                         pp,
@@ -252,8 +345,18 @@ public final class Sign {
                         commitment,
                         response);
 
-        return new SignedReport(
-                report,
-                signature);
+        SignedReport signedReport =
+                new SignedReport(
+                        report,
+                        signature);
+
+        long signatureNs =
+                System.nanoTime() - signatureStart;
+
+        return new SignMeasurement(
+                signedReport,
+                kemEncapNs,
+                aeadEncryptNs,
+                signatureNs);
     }
 }

@@ -81,10 +81,61 @@ public final class Aggregate {
             String batchId,
             long timestamp) {
 
-        Objects.requireNonNull(pp, "pp");
-        Objects.requireNonNull(
+        return aggregateInternal(
+                pp,
                 registry,
-                "registry");
+                candidates,
+                batchId,
+                timestamp,
+                true);
+    }
+
+    /**
+     * 聚合已经通过 Algorithm 4 SigVerify 的报告。
+     *
+     * <p>该入口仅用于将“单签名验证”与“纯聚合”分开测量。
+     * 调用者必须保证每个候选项已经通过完整的
+     * {@link SigVerify#verify(PublicParams, DeviceRegistry, Report, Signature)}
+     * 检查。该方法仍执行空项、批次、时间戳和
+     * (ID_i, R_i) 去重检查，但不会再次访问注册表或验证签名。</p>
+     *
+     * @param pp 系统公共参数
+     * @param preverifiedCandidates 已完成单签名验证的候选报告
+     * @param batchId 目标批次 bid
+     * @param timestamp 目标时间戳 t
+     * @return 本地聚合结果，或者 Optional.empty()
+     */
+    public static Optional<Result> aggregatePreverified(
+            PublicParams pp,
+            List<SignedReport> preverifiedCandidates,
+            String batchId,
+            long timestamp) {
+
+        return aggregateInternal(
+                pp,
+                null,
+                preverifiedCandidates,
+                batchId,
+                timestamp,
+                false);
+    }
+
+    private static Optional<Result> aggregateInternal(
+            PublicParams pp,
+            DeviceRegistry registry,
+            List<SignedReport> candidates,
+            String batchId,
+            long timestamp,
+            boolean verifySignatures) {
+
+        Objects.requireNonNull(pp, "pp");
+
+        if (verifySignatures) {
+            Objects.requireNonNull(
+                    registry,
+                    "registry");
+        }
+
         Objects.requireNonNull(
                 candidates,
                 "candidates");
@@ -189,13 +240,15 @@ public final class Aggregate {
             }
 
             /*
-             * 调用 Algorithm 4 SigVerify。
+             * 生产入口执行 Algorithm 4 SigVerify；
+             * 预验证入口由调用者保证该条件已经成立。
              */
-            if (!SigVerify.verify(
-                    pp,
-                    registry,
-                    report,
-                    signature)) {
+            if (verifySignatures
+                    && !SigVerify.verify(
+                            pp,
+                            registry,
+                            report,
+                            signature)) {
 
                 continue;
             }

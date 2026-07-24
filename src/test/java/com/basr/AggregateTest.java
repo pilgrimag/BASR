@@ -208,6 +208,108 @@ class AggregateTest {
     }
 
     /**
+     * 对相同的合法输入，预验证聚合路径必须与生产聚合路径
+     * 生成完全相同的聚合签名、mu 和条目数量。
+     */
+    @Test
+    void preverifiedPathShouldMatchProductionAggregation() {
+
+        SignedReport first =
+                sign(
+                        deviceOne,
+                        "temperature=25",
+                        0);
+
+        SignedReport second =
+                sign(
+                        deviceTwo,
+                        "confidential-pressure=80",
+                        1);
+
+        SignedReport third =
+                sign(
+                        deviceThree,
+                        "humidity=40",
+                        0);
+
+        List<SignedReport> candidates =
+                List.of(
+                        first,
+                        second,
+                        third);
+
+        Aggregate.Result productionResult =
+                Aggregate.aggregate(
+                                pp,
+                                registry,
+                                candidates,
+                                "batch-001",
+                                batchTimestamp)
+                        .orElseThrow();
+
+        Aggregate.Result preverifiedResult =
+                Aggregate.aggregatePreverified(
+                                pp,
+                                candidates,
+                                "batch-001",
+                                batchTimestamp)
+                        .orElseThrow();
+
+        assertEquals(
+                productionResult.acceptedCount(),
+                preverifiedResult.acceptedCount());
+
+        assertEquals(
+                productionResult.batchRecord()
+                        .getAggregateSignature()
+                        .getRagg(),
+                preverifiedResult.batchRecord()
+                        .getAggregateSignature()
+                        .getRagg());
+
+        assertEquals(
+                productionResult.batchRecord()
+                        .getAggregateSignature()
+                        .getSagg(),
+                preverifiedResult.batchRecord()
+                        .getAggregateSignature()
+                        .getSagg());
+
+        assertArrayEquals(
+                productionResult.batchRecord()
+                        .getMu(),
+                preverifiedResult.batchRecord()
+                        .getMu());
+
+        assertEquals(
+                productionResult.packageEntries()
+                        .size(),
+                preverifiedResult.packageEntries()
+                        .size());
+
+        for (int index = 0;
+             index < productionResult.packageEntries().size();
+             index++) {
+
+            assertSame(
+                    productionResult.packageEntries()
+                            .get(index)
+                            .report(),
+                    preverifiedResult.packageEntries()
+                            .get(index)
+                            .report());
+
+            assertEquals(
+                    productionResult.packageEntries()
+                            .get(index)
+                            .commitment(),
+                    preverifiedResult.packageEntries()
+                            .get(index)
+                            .commitment());
+        }
+    }
+
+    /**
      * 完全相同的 (ID_i, R_i) 只能被接受一次。
      */
     @Test

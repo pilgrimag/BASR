@@ -162,6 +162,88 @@ class RecoveryTest {
     }
 
     /**
+     * 已验证敏感报告的测量入口应正确恢复明文，
+     * 并分别返回 KEM.Decap 与 AEAD.Dec 时间。
+     */
+    @Test
+    void measuredSensitiveRecoveryShouldSeparateCryptoStages() {
+
+        Aggregate.Result result =
+                createValidAggregate();
+
+        Aggregate.PackageEntry target =
+                findEntry(
+                        result,
+                        sensitiveDevice.getDeviceId());
+
+        Optional<Recovery.RecoveryMeasurement> optionalMeasurement =
+                Recovery.recoverSensitivePreverified(
+                        pp,
+                        recoveryKey,
+                        target.report());
+
+        assertTrue(
+                optionalMeasurement.isPresent());
+
+        Recovery.RecoveryMeasurement measurement =
+                optionalMeasurement.orElseThrow();
+
+        assertArrayEquals(
+                SENSITIVE_MESSAGE,
+                measurement.plaintext());
+
+        assertTrue(
+                measurement.kemDecapNs() > 0L);
+
+        assertTrue(
+                measurement.aeadDecryptNs() > 0L);
+
+        assertEquals(
+                Math.addExact(
+                        measurement.kemDecapNs(),
+                        measurement.aeadDecryptNs()),
+                measurement.totalNs());
+    }
+
+    /**
+     * 预验证恢复入口只能处理合法敏感报告，
+     * 且使用错误恢复密钥时必须失败。
+     */
+    @Test
+    void measuredRecoveryShouldRejectInvalidInputs() {
+
+        Aggregate.Result result =
+                createValidAggregate();
+
+        Aggregate.PackageEntry publicEntry =
+                findEntry(
+                        result,
+                        publicDevice.getDeviceId());
+
+        assertTrue(
+                Recovery.recoverSensitivePreverified(
+                                pp,
+                                recoveryKey,
+                                publicEntry.report())
+                        .isEmpty());
+
+        Aggregate.PackageEntry sensitiveEntry =
+                findEntry(
+                        result,
+                        sensitiveDevice.getDeviceId());
+
+        RecoveryKey wrongRecoveryKey =
+                RecKeyGen.generate(pp);
+
+        assertTrue(
+                Recovery.recoverSensitivePreverified(
+                                pp,
+                                wrongRecoveryKey,
+                                sensitiveEntry.report())
+                        .isEmpty());
+    }
+
+    /**
      * Pkg 中不存在指定设备身份时应返回 empty。
      */
     @Test

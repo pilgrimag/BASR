@@ -66,6 +66,148 @@ public final class Recovery {
     }
 
     /**
+     * 已验证敏感报告的恢复测量结果。
+     *
+     * @param plaintext 恢复出的原始报告
+     * @param kemDecapNs KEM 解封装时间，单位为纳秒
+     * @param aeadDecryptNs AEAD 解密时间，单位为纳秒
+     */
+    public record RecoveryMeasurement(
+            byte[] plaintext,
+            long kemDecapNs,
+            long aeadDecryptNs) {
+
+        public RecoveryMeasurement {
+            Objects.requireNonNull(
+                    plaintext,
+                    "plaintext");
+
+            plaintext =
+                    plaintext.clone();
+
+            if (kemDecapNs < 0
+                    || aeadDecryptNs < 0) {
+
+                throw new IllegalArgumentException(
+                        "Measured times cannot be negative");
+            }
+        }
+
+        @Override
+        public byte[] plaintext() {
+            return plaintext.clone();
+        }
+
+        /**
+         * 恢复密码学总时间：
+         * KEM.Decap + AEAD.Dec。
+         */
+        public long totalNs() {
+            return Math.addExact(
+                    kemDecapNs,
+                    aeadDecryptNs);
+        }
+    }
+
+    /**
+     * 恢复一个已经通过整批 AggVerify 的敏感报告，
+     * 并分别测量 KEM.Decap 与 AEAD.Dec。
+     *
+     * <p>该入口不会执行聚合验证，也不会在 Pkg 中查找目标条目。
+     * 它仅供已经完成整批验证和目标定位的业务层或实验程序调用。
+     * 未经验证的报告不得直接传入该方法。</p>
+     *
+     * @param pp 系统公共参数
+     * @param recoveryKey DR 恢复密钥
+     * @param verifiedSensitiveReport 已验证且 beta=1 的敏感报告
+     * @return 恢复测量结果；输入或解密失败时返回 Optional.empty()
+     */
+    public static Optional<RecoveryMeasurement>
+            recoverSensitivePreverified(
+                    PublicParams pp,
+                    RecoveryKey recoveryKey,
+                    Report verifiedSensitiveReport) {
+
+        Objects.requireNonNull(pp, "pp");
+
+        if (recoveryKey == null
+                || verifiedSensitiveReport == null
+                || verifiedSensitiveReport.getBeta() != 1
+                || !verifiedSensitiveReport
+                        .hasRecoveryMaterial()) {
+
+            return Optional.empty();
+        }
+
+        byte[] symmetricKey = null;
+
+        try {
+            long kemStart =
+                    System.nanoTime();
+
+            symmetricKey =
+                    Kem.decap(
+                            pp,
+                            recoveryKey,
+                            verifiedSensitiveReport
+                                    .getRecoveryMaterial());
+
+            long kemDecapNs =
+                    System.nanoTime() - kemStart;
+
+            /*
+             * AAD 构造不属于 KEM.Decap 或 AEAD.Dec，
+             * 因而不计入两项密码原语时间。
+             */
+            byte[] associatedData =
+                    BasrTranscript.buildAad(
+                            verifiedSensitiveReport
+                                    .getDeviceId(),
+                            verifiedSensitiveReport
+                                    .getPublicKey(),
+                            verifiedSensitiveReport
+                                    .getBeta(),
+                            verifiedSensitiveReport
+                                    .getBatchId(),
+                            verifiedSensitiveReport
+                                    .getTimestamp());
+
+            long aeadStart =
+                    System.nanoTime();
+
+            byte[] plaintext =
+                    Aead.decrypt(
+                            pp,
+                            symmetricKey,
+                            verifiedSensitiveReport
+                                    .getData(),
+                            associatedData);
+
+            long aeadDecryptNs =
+                    System.nanoTime() - aeadStart;
+
+            return Optional.of(
+                    new RecoveryMeasurement(
+                            plaintext,
+                            kemDecapNs,
+                            aeadDecryptNs));
+
+        } catch (SecurityException exception) {
+            return Optional.empty();
+
+        } catch (IllegalArgumentException exception) {
+            return Optional.empty();
+
+        } finally {
+            if (symmetricKey != null) {
+                Arrays.fill(
+                        symmetricKey,
+                        (byte) 0);
+            }
+        }
+    }
+
+    /**
      * 直接恢复 Aggregate 返回结果中的目标报告。
      *
      * @param pp               系统公共参数
@@ -257,89 +399,11 @@ public final class Recovery {
             return Optional.empty();
         }
 
-        byte[] symmetricKey = null;
-
-        try {
-            /*
-             * K_i <- KEM.Decap(
-             *          pp_KEM,
-             *          sk_R,
-             *          RM_i
-             *      )
-             *
-             * 当前具体实现：
-             *
-             *      DHKEM-X25519-HKDF-SHA256
-             */
-            symmetricKey =
-                    Kem.decap(
-                            pp,
-                            recoveryKey,
-                            report.getRecoveryMaterial());
-
-            /*
-             * 重建与 Sign 阶段完全相同的关联数据：
-             *
-             * AAD_i =
-             *      ID_i || pk_i || beta_i || bid || t
-             */
-            byte[] associatedData =
-                    BasrTranscript.buildAad(
-                            report.getDeviceId(),
-                            report.getPublicKey(),
-                            report.getBeta(),
-                            report.getBatchId(),
-                            report.getTimestamp());
-
-            /*
-             * m_i <- AEAD.Dec(
-             *          pp_AEAD,
-             *          K_i,
-             *          D_i,
-             *          AAD_i
-             *      )
-             *
-             * 当前具体实现：
-             *
-             *      AES-256-GCM
-             */
-            byte[] plaintext =
-                    Aead.decrypt(
-                            pp,
-                            symmetricKey,
-                            report.getData(),
-                            associatedData);
-
-            return Optional.of(plaintext);
-
-        } catch (SecurityException exception) {
-            /*
-             * AES-GCM 认证标签验证失败。
-             *
-             * 常见原因：
-             *
-             * - 使用了错误的 DR 私钥；
-             * - 密文被篡改；
-             * - AAD 不一致；
-             * - RM_i 与当前密文不匹配。
-             */
-            return Optional.empty();
-
-        } catch (IllegalArgumentException exception) {
-            /*
-             * 恢复材料、密钥类型或密文格式非法。
-             */
-            return Optional.empty();
-
-        } finally {
-            /*
-             * 临时对称密钥不应长时间保留在内存中。
-             */
-            if (symmetricKey != null) {
-                Arrays.fill(
-                        symmetricKey,
-                        (byte) 0);
-            }
-        }
+        return recoverSensitivePreverified(
+                        pp,
+                        recoveryKey,
+                        report)
+                .map(
+                        RecoveryMeasurement::plaintext);
     }
 }
